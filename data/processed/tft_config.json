@@ -1,0 +1,41 @@
+{
+    "time_varying_known_reals": [
+        "time_idx",
+        "week_cycle",
+        "sin_week_cycle",
+        "cos_week_cycle",
+        "log_pop",
+        "forecast_temp_med",
+        "forecast_umid_med",
+        "forecast_precip_tot"
+    ],
+    "time_varying_unknown_reals": [
+        "casos",
+        "incidence",
+        "temp_med",
+        "precip_med",
+        "rel_humid_med",
+        "enso",
+        "iod",
+        "tda_entropy_H0",
+        "tda_entropy_H1",
+        "tda_amplitude_H0",
+        "tda_amplitude_H1"
+    ],
+    "static_categoricals": [
+        "koppen",
+        "biome",
+        "macroregion_name"
+    ],
+    "targets": [
+        "R0",
+        "peak_week",
+        "log_total_cases",
+        "alpha",
+        "beta",
+        "gamma"
+    ],
+    "static_reals": [
+        "num_neighbors"
+    ]
+}

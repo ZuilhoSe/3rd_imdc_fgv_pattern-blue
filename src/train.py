@@ -14,12 +14,12 @@ torch.set_float32_matmul_precision('medium')
 warnings.filterwarnings("ignore")
 
 DATA_PATH = "../data/processed/dataset_tft_completo.parquet"
-BATCH_SIZE = 64
+BATCH_SIZE = 512
 MAX_EPOCHS = 30
 LEARNING_RATE = 0.03
 GRADIENT_CLIP_VAL = 0.1
 
-TARGETS = ["R0", "peak_week", "log_total_cases", "alpha", "beta"]
+TARGETS = ["R0", "peak_week", "log_total_cases", "alpha", "beta", "gamma"]
 
 TIME_VARYING_KNOWN_REALS = [
     "time_idx", "week_cycle", "sin_week_cycle", "cos_week_cycle", "log_pop",
@@ -28,13 +28,13 @@ TIME_VARYING_KNOWN_REALS = [
 
 TIME_VARYING_UNKNOWN_REALS = [
     "casos", "incidence",
-    "temp_med", "precip_med", "rel_humid_med",
-    "enso", "iod",
-    "tda_entropy_H1", "tda_amplitude_H1"
+    "temp_med", "precip_med", "rel_humid_med"
+    # "enso", "iod",
+    # "tda_entropy_H1", "tda_amplitude_H1"
 ]
 
 STATIC_CATEGORICALS = ["uf", "koppen", "biome", "macroregion_name"]
-STATIC_REALS = ["num_neighbors"]
+STATIC_REALS = []
 
 
 def load_and_clean_data():
@@ -47,7 +47,18 @@ def load_and_clean_data():
         data[col] = data[col].astype(str)
 
     print(f"Linhas antes da limpeza final: {len(data)}")
-    data = data.dropna(subset=TARGETS + TIME_VARYING_UNKNOWN_REALS + TIME_VARYING_KNOWN_REALS)
+
+    # ==========================================
+    # RAIO-X DOS NULOS (Adicione este bloco)
+    # ==========================================
+    colunas_verificar = TARGETS + TIME_VARYING_UNKNOWN_REALS + TIME_VARYING_KNOWN_REALS
+    print("\n--- RAIO-X DE NULOS ---")
+    nulos = data[colunas_verificar].isna().sum()
+    print(nulos[nulos > 0])  # Vai imprimir apenas as colunas que têm algum NaN
+    print("-----------------------\n")
+    # ==========================================
+
+    data = data.dropna(subset=colunas_verificar)
     print(f"Linhas para treino: {len(data)}")
 
     data["geocode"] = data["geocode"].astype(str)
@@ -69,8 +80,9 @@ def train():
         GroupNormalizer(groups=["geocode"], transformation="softplus"),  # R0
         GroupNormalizer(groups=["geocode"], transformation="softplus"),  # peak_week
         GroupNormalizer(groups=["geocode"], transformation=None),  # log_total_cases
-        GroupNormalizer(groups=["geocode"], transformation="logit"),  # alpha (0-1)
-        GroupNormalizer(groups=["geocode"], transformation="softplus")  # beta
+        GroupNormalizer(groups=["geocode"], transformation="logit"),  # alpha
+        GroupNormalizer(groups=["geocode"], transformation="softplus"),  # beta
+        GroupNormalizer(groups=["geocode"], transformation="softplus")  # gamma (NOVO)
     ])
 
     training_dataset = TimeSeriesDataSet(
@@ -105,7 +117,7 @@ def train():
     train_dataloader = training_dataset.to_dataloader(
         train=True,
         batch_size=BATCH_SIZE,
-        num_workers=0
+        num_workers=1
     )
     val_dataloader = validation.to_dataloader(
         train=False,
@@ -115,7 +127,7 @@ def train():
 
     print("Initializing TFT")
 
-    losses = [QuantileLoss(), QuantileLoss(), QuantileLoss(), QuantileLoss(), QuantileLoss()]
+    losses = [QuantileLoss(), QuantileLoss(), QuantileLoss(), QuantileLoss(), QuantileLoss(), QuantileLoss()]
 
     tft = TemporalFusionTransformer.from_dataset(
         training_dataset,
@@ -124,9 +136,9 @@ def train():
         attention_head_size=2,
         dropout=0.1,
         hidden_continuous_size=16,
-        output_size=[7, 7, 7, 7, 7],
+        output_size=[7, 7, 7, 7, 7, 7],
         loss=MultiLoss(losses),
-        log_interval=10,
+        log_interval=-1,
         reduce_on_plateau_patience=4,
     )
 
@@ -150,9 +162,11 @@ def train():
 
     trainer = pl.Trainer(
         max_epochs=MAX_EPOCHS,
-        accelerator="gpu" if torch.cuda.is_available() else "cpu",
+        accelerator="gpu",
         devices=1,
-        enable_model_summary=True,
+        precision="bf16-mixed",  # <--- ATIVA OS TENSOR CORES DA RTX
+        limit_train_batches=2000,  # <--- Acelera o fim da época
+        limit_val_batches=500,  # <--- Acelera a validação
         gradient_clip_val=GRADIENT_CLIP_VAL,
         callbacks=[early_stop_callback, checkpoint_callback, LearningRateMonitor()],
         logger=TensorBoardLogger("models/logs")

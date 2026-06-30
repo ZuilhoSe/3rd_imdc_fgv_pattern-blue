@@ -186,3 +186,4 @@ data/raw
 data/processed/dataset_tft_completo.csv
 data/processed/dataset_inference.parquet
 .idea/workspace.xml
+data/processed/dataset_tft_completo.parquet
