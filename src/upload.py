@@ -38,7 +38,7 @@ DISEASE    = "A90"
 SUB_DIR    = "outputs/submissions"
 TESTS      = [(1, 2022), (2, 2023), (3, 2024), (4, 2025)]
 
-DRY_RUN    = True
+DRY_RUN    = False
 PUBLISHED  = True
 CASE_DEF   = "probable"
 SLEEP      = 1.0
