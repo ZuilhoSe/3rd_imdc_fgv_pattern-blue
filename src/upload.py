@@ -23,16 +23,22 @@ import time
 import pandas as pd
 import imdc_submission as S
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # ============================ CONFIG (preencha) ============================
-API_KEY    = "ZuilhoSe:bbfa2e47-c0d8-4b8f-999d-5ab596d7ec25"
-REPOSITORY = "ZuilhoSe/Pattern-Blue"
-COMMIT     = "a2ffc3fbfe6cdedc31437254c3e8a2414c36ede0"
+API_KEY    = os.getenv("API_KEY", "")                          # .env: API_KEY=usuario:chave
+REPOSITORY = os.getenv("REPOSITORY", "seu_usuario/seu_repo")   # .env: REPOSITORY=owner/repo
+COMMIT     = os.getenv("COMMIT", "COLE_O_COMMIT_HASH")         # .env: COMMIT=<git hash>
 DISEASE    = "A90"
 
 SUB_DIR    = "outputs/submissions"
 TESTS      = [(1, 2022), (2, 2023), (3, 2024), (4, 2025)]
 
-DRY_RUN    = False
+DRY_RUN    = True
 PUBLISHED  = True
 CASE_DEF   = "probable"
 SLEEP      = 1.0
