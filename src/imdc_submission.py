@@ -1,143 +1,145 @@
 """
-IMDC 2026 — UPLOAD das submissões de validação (dengue) para a plataforma Mosqlimate.
+IMDC 2026 — reconstrução (episcanner/Richards) + formatação/validação de submissão.
+O TFT prevê parâmetros do episcanner por temporada; aqui viram curvas semanais de casos.
 
-Percorre os CSVs gerados por build_submissions.py e envia uma predição por unidade
-geográfica, por teste de validação, via mosqlient.upload_prediction (v2.5.x).
-
-Assinatura real (mosqlient 2.5.2):
-  upload_prediction(api_key, repository, disease, description, commit, prediction,
-                    adm_level, case_definition='probable', published=True,
-                    adm_0='BRA', adm_1=None, adm_2=None, adm_3=None)
-  - repository:  "owner/repo"  (seu repositório público)
-  - disease:     código CID-10 -> dengue = "A90"
-  - adm_level:   1 (estado) ou 2 (município)
-  - adm_1 / adm_2: INTEIROS (código IBGE da UF / geocode do município)
-  - prediction:  DataFrame com date, pred, lower/upper_{50,80,90,95}
-
-SEGURANÇA: começa em DRY_RUN (valida e mostra o que seria enviado, sem enviar).
-Só envia de verdade quando você puser DRY_RUN = False.
+Reconstrução Richards (parametrização do episcanner):
+    J(t) = L - L*(1 + alpha*exp(b*(t-tj)))**(-1/alpha)     [casos acumulados]
+    SIR:  beta = b/alpha  ->  b = beta*alpha ;  R0 = 1/(1-alpha)
+Só precisamos de 4 alvos: total_cases (L), alpha, beta, peak_week (tj).
+R0 e gamma são redundantes (funções de alpha e b) -> descartados na reconstrução.
 """
-import os
-import glob
-import time
+import numpy as np
 import pandas as pd
-import imdc_submission as S
+from epiweeks import Week
 
-# ============================ CONFIG (preencha) ============================
-API_KEY    = "X-UID-Key:ZuilhoSe:bbfa2e47-c0d8-4b8f-999d-5ab596d7ec25"          # perfil na plataforma -> botão azul
-REPOSITORY = "ZuilhoSe/Pattern-Blue"      # repositório público do modelo
-COMMIT     = "COLE_O_COMMIT_HASH"        # git log -> hash do commit que gerou as previsões
-DISEASE    = "A90"                        # dengue (CID-10)
-
-SUB_DIR    = "outputs/submissions"
-TESTS      = [(1, 2022), (2, 2023), (3, 2024), (4, 2025)]
-
-DRY_RUN    = True     # << troque para False para enviar de verdade
-PUBLISHED  = True
-CASE_DEF   = "probable"
-SLEEP      = 1.0      # pausa entre envios (gentileza com a API)
-MANIFEST   = "outputs/upload_manifest.csv"
-# ===========================================================================
-
-UF_SIGLA_TO_CODE = {
-    "RO":11,"AC":12,"AM":13,"RR":14,"PA":15,"AP":16,"TO":17,
-    "MA":21,"PI":22,"CE":23,"RN":24,"PB":25,"PE":26,"AL":27,"SE":28,"BA":29,
-    "MG":31,"ES":32,"RJ":33,"SP":35,
-    "PR":41,"SC":42,"RS":43,"MS":50,"MT":51,"GO":52,"DF":53,
+QLEVELS = {  # nível de probabilidade de cada coluna exigida pelo desafio
+    "lower_95": 0.025, "lower_90": 0.05, "lower_80": 0.10, "lower_50": 0.25,
+    "pred": 0.50,
+    "upper_50": 0.75, "upper_80": 0.90, "upper_90": 0.95, "upper_95": 0.975,
 }
+INTERVAL_ORDER = ["lower_95","lower_90","lower_80","lower_50","pred",
+                  "upper_50","upper_80","upper_90","upper_95"]
+PARAMS = ["total_cases", "alpha", "beta", "peak_week"]
 
+# ---------------------------------------------------------------- datas
+def season_weeks(start_year):
+    w, end = Week(start_year, 41, system="cdc"), Week(start_year + 1, 40, system="cdc")
+    weeks = []
+    while w <= end:
+        weeks.append(w); w = w + 1
+    return weeks
 
-def load_manifest():
-    if os.path.exists(MANIFEST):
-        return pd.read_csv(MANIFEST, dtype=str)
-    return pd.DataFrame(columns=["challenge", "test", "unit", "status", "msg"])
+def season_sundays(start_year):
+    return [w.startdate() for w in season_weeks(start_year)]
 
+def _peak_index_lookup(start_year):
+    """índice (na temporada) de cada semana epi do ano start_year+1; p/ ancorar o pico."""
+    weeks = season_weeks(start_year)
+    look = np.full(54, -1, dtype=int)
+    for i, wk in enumerate(weeks):
+        if wk.year == start_year + 1 and 1 <= wk.week <= 53:
+            look[wk.week] = i
+    return look, len(weeks)
 
-def already_ok(man, challenge, test, unit):
-    m = man[(man.challenge == challenge) & (man.test == str(test)) & (man.unit == str(unit))]
-    return (m["status"] == "ok").any()
+# ------------------------------------------------- reconstrução vetorizada
+def _richards_cum(t, L, alpha, b, tj):
+    return L - L * (1.0 + alpha * np.exp(b * (t - tj)))**(-1.0/alpha)
 
+def weekly_curves(start_year, total_cases, alpha, beta, peak_week):
+    """
+    Vetorizado. Entradas shape (N,) -> saída casos semanais shape (N, W).
+    """
+    L  = np.clip(np.asarray(total_cases, float), 0, None)
+    al = np.clip(np.asarray(alpha, float), 1e-4, 0.999)
+    be = np.clip(np.asarray(beta, float), 1e-8, None)
+    tj = np.clip(np.asarray(peak_week, float), 1, 53)
+    b  = be * al
+    look, W = _peak_index_lookup(start_year)
+    kp = look[np.clip(np.round(tj).astype(int), 1, 53)]
+    kp = np.where(kp < 0, W // 2, kp)                       # fallback: meio da temporada
+    idx = np.arange(W)[None, :]                             # (1,W)
+    tau = idx - kp[:, None] + tj[:, None]                   # (N,W)
+    cur = _richards_cum(tau,   L[:,None], al[:,None], b[:,None], tj[:,None]) \
+        - _richards_cum(tau-1, L[:,None], al[:,None], b[:,None], tj[:,None])
+    return np.clip(cur, 0, None)                            # (N,W)
 
-def do_upload(df, adm_level, adm_1, adm_2, description):
-    import mosqlient
-    return mosqlient.upload_prediction(
-        api_key=API_KEY, repository=REPOSITORY, disease=DISEASE,
-        description=description, commit=COMMIT, prediction=df,
-        adm_level=adm_level, case_definition=CASE_DEF, published=PUBLISHED,
-        adm_0="BRA", adm_1=adm_1, adm_2=adm_2,
-    )
+# ------------------------------------------------- amostragem Monte Carlo
+def _interp_rows(u, qs, V):
+    """interp linear por linha. u:(M,D)  qs:(K,) níveis compartilhados  V:(M,K) valores."""
+    qs = np.asarray(qs, float)
+    j = np.clip(np.searchsorted(qs, u, side="right") - 1, 0, len(qs) - 2)  # (M,D)
+    q0, q1 = qs[j], qs[j + 1]
+    v0 = np.take_along_axis(V, j,     axis=1)
+    v1 = np.take_along_axis(V, j + 1, axis=1)
+    w = np.where(q1 > q0, (u - q0) / (q1 - q0), 0.0)
+    return np.clip(v0 + w * (v1 - v0), np.minimum(v0, v1), np.maximum(v0, v1))
 
+def sample_params(param_q, qs, D, seed=0):
+    """
+    param_q: dict {param: array (M,K)} com os K quantis previstos p/ M municípios.
+    Retorna dict {param: array (M,D)} amostrado das marginais (interp da CDF inversa).
+    """
+    rng = np.random.default_rng(seed)
+    out = {}
+    for p in PARAMS:
+        M = param_q[p].shape[0]
+        u = rng.uniform(0, 1, size=(M, D))
+        out[p] = _interp_rows(u, qs, param_q[p])
+    return out
 
-def process_unit(challenge, test, year, unit, csv_path, adm_level, man, results):
-    if already_ok(man, challenge, test, unit):
-        print(f"    [{unit}] já enviado (skip)"); return
-    df = pd.read_csv(csv_path)
-    ok, errs = S.validate(df, year, verbose=False)
-    if not ok:
-        print(f"    [{unit}] ❌ inválido: {errs}")
-        results.append((challenge, test, unit, "invalido", ";".join(errs))); return
+# ------------------------------------------------- montagem + validação
+def _finalize(mat_quantis):
+    """mat_quantis: (9,W) na ordem INTERVAL_ORDER -> aplica >=0 e aninhamento."""
+    m = np.clip(np.asarray(mat_quantis, float), 0, None)
+    return np.sort(m, axis=0)
 
-    if adm_level == 1:
-        adm_1, adm_2 = UF_SIGLA_TO_CODE[unit], None
+def build_df(start_year, mat_quantis):
+    dates = pd.to_datetime(season_sundays(start_year)).strftime("%Y-%m-%d")
+    m = _finalize(mat_quantis)
+    df = pd.DataFrame({"date": dates})
+    for i, c in enumerate(INTERVAL_ORDER):
+        df[c] = m[i]
+    return df
+
+def city_submission(start_year, param_q_row, qs, D=3000, seed=0):
+    """param_q_row: dict {param: array (K,)} de UM município -> df de submissão."""
+    pq = {p: np.asarray(param_q_row[p], float)[None, :] for p in PARAMS}
+    s = sample_params(pq, qs, D, seed)
+    curves = weekly_curves(start_year, s["total_cases"][0], s["alpha"][0],
+                           s["beta"][0], s["peak_week"][0])            # (D,W)
+    mat = np.vstack([np.quantile(curves, QLEVELS[c], axis=0) for c in INTERVAL_ORDER])
+    return build_df(start_year, mat)
+
+def state_submission(start_year, param_q_uf, qs, D=1000, seed=0):
+    """
+    param_q_uf: dict {param: array (M,K)} de TODOS os municípios de uma UF.
+    Soma as curvas por sorteio (propaga incerteza p/ o total estadual) -> df.
+    """
+    s = sample_params(param_q_uf, qs, D, seed)               # cada (M,D)
+    M, W = s["alpha"].shape[0], len(season_weeks(start_year))
+    total = np.zeros((D, W))
+    for m in range(M):                                       # 1 município por vez (memória)
+        total += weekly_curves(start_year, s["total_cases"][m], s["alpha"][m],
+                               s["beta"][m], s["peak_week"][m])
+    mat = np.vstack([np.quantile(total, QLEVELS[c], axis=0) for c in INTERVAL_ORDER])
+    return build_df(start_year, mat)
+
+def validate(df, start_year, verbose=True):
+    errs = []
+    exp = pd.to_datetime(pd.Series(season_sundays(start_year))).dt.strftime("%Y-%m-%d").tolist()
+    if list(df["date"].astype(str)) != exp:
+        errs.append(f"datas != EW41/{start_year}-EW40/{start_year+1} ({len(exp)} sem. esperadas)")
+    d = pd.to_datetime(df["date"])
+    if not (d.dt.weekday == 6).all(): errs.append("nem todas as datas são domingos")
+    if len(d) > 1 and not (d.diff().dropna().dt.days == 7).all(): errs.append("descontinuidade nas datas")
+    miss = [c for c in INTERVAL_ORDER if c not in df.columns]
+    if miss: errs.append(f"faltam colunas: {miss}")
     else:
-        adm_1, adm_2 = None, int(unit)
-    desc = f"3rd IMDC dengue {'UF' if adm_level==1 else 'municipio'} " \
-           f"| validacao teste {test} ({year}-{year+1}) | {unit}"
-
-    if DRY_RUN:
-        print(f"    [{unit}] ✅ válido — DRY_RUN (adm_level={adm_level}, "
-              f"adm_1={adm_1}, adm_2={adm_2}, {len(df)} semanas)")
-        results.append((challenge, test, unit, "dry_run", "")); return
-    try:
-        do_upload(df, adm_level, adm_1, adm_2, desc)
-        print(f"    [{unit}] ⬆️ enviado")
-        results.append((challenge, test, unit, "ok", ""))
-    except Exception as e:
-        print(f"    [{unit}] ⚠️ falha no envio: {e}")
-        results.append((challenge, test, unit, "erro", str(e)[:300]))
-    time.sleep(SLEEP)
-
-
-def main():
-    if not DRY_RUN:
-        import inspect, mosqlient
-        print("assinatura:", inspect.signature(mosqlient.upload_prediction), "\n")
-        assert API_KEY != "COLE_SUA_API_KEY", "preencha API_KEY"
-        assert "/" in REPOSITORY and REPOSITORY != "seu_usuario/seu_repo", "preencha REPOSITORY"
-        assert COMMIT != "COLE_O_COMMIT_HASH", "preencha COMMIT"
-
-    man = load_manifest()
-    results = []
-    for test, year in TESTS:
-        print(f"\n===== Teste {test} — temporada {year}-{year+1} =====")
-        # cidade (adm_level 2)
-        cdir = os.path.join(SUB_DIR, "dengue_city", f"test{test}_{year}")
-        print(f"  [CIDADE] {cdir}")
-        for f in sorted(glob.glob(os.path.join(cdir, "*.csv"))):
-            if os.path.basename(f).startswith("_"):  # pula agregados _todas
-                continue
-            geocode = os.path.splitext(os.path.basename(f))[0]
-            process_unit("dengue_city", test, year, geocode, f, 2, man, results)
-        # estado (adm_level 1)
-        sdir = os.path.join(SUB_DIR, "dengue_state", f"test{test}_{year}")
-        print(f"  [ESTADO] {sdir}")
-        for f in sorted(glob.glob(os.path.join(sdir, "*.csv"))):
-            if os.path.basename(f).startswith("_"):
-                continue
-            uf = os.path.splitext(os.path.basename(f))[0]
-            process_unit("dengue_state", test, year, uf, f, 1, man, results)
-
-    # atualiza manifesto (append + dedup por challenge/test/unit mantendo o último)
-    new = pd.DataFrame(results, columns=["challenge", "test", "unit", "status", "msg"]).astype(str)
-    full = pd.concat([man, new], ignore_index=True) if len(man) else new
-    full = full.drop_duplicates(subset=["challenge", "test", "unit"], keep="last")
-    os.makedirs(os.path.dirname(MANIFEST), exist_ok=True)
-    full.to_csv(MANIFEST, index=False)
-    print(f"\nresumo por status:\n{full['status'].value_counts().to_string()}")
-    print(f"manifesto -> {MANIFEST}")
-    if DRY_RUN:
-        print("\n⚠️ DRY_RUN ativo: nada foi enviado. Ponha DRY_RUN=False para enviar.")
-
-
-if __name__ == "__main__":
-    main()
+        v = df[INTERVAL_ORDER].to_numpy(float)
+        if np.isnan(v).any(): errs.append("há NaN")
+        if (v < 0).any(): errs.append("há valores negativos")
+        if (np.diff(v, axis=1) < -1e-9).any(): errs.append("intervalos não-aninhados")
+    ok = not errs
+    if verbose:
+        print("  ✅ válido" if ok else "  ❌ inválido: " + "; ".join(errs))
+    return ok, errs
