@@ -24,26 +24,35 @@ import pandas as pd
 import imdc_submission as S
 
 # ============================ CONFIG (preencha) ============================
-API_KEY    = "X-UID-Key:ZuilhoSe:bbfa2e47-c0d8-4b8f-999d-5ab596d7ec25"
+API_KEY    = "ZuilhoSe:bbfa2e47-c0d8-4b8f-999d-5ab596d7ec25"
 REPOSITORY = "ZuilhoSe/Pattern-Blue"
-COMMIT     = "844f32d068d4f915ced17f33062171a74637adb5"
+COMMIT     = "a2ffc3fbfe6cdedc31437254c3e8a2414c36ede0"
 DISEASE    = "A90"
 
 SUB_DIR    = "outputs/submissions"
 TESTS      = [(1, 2022), (2, 2023), (3, 2024), (4, 2025)]
 
-DRY_RUN    = True
+DRY_RUN    = False
 PUBLISHED  = True
 CASE_DEF   = "probable"
 SLEEP      = 1.0
 MANIFEST   = "outputs/upload_manifest.csv"
 # ===========================================================================
 
+def normalize_api_key(k: str) -> str:
+    """A mosqlient faz x_uid_key.split(':') e espera exatamente 'usuario:chave'.
+    Remove aspas/espaços e o rótulo 'X-UID-Key:' caso tenha sido colado junto."""
+    k = (k or "").strip().strip('"').strip("'").strip()
+    if k.lower().startswith("x-uid-key"):
+        k = k.split(":", 1)[1].strip() if ":" in k else k
+    return k
+
+
 UF_SIGLA_TO_CODE = {
-    "RO":11,"AC":12,"AM":13,"RR":14,"PA":15,"AP":16,"TO":17,
-    "MA":21,"PI":22,"CE":23,"RN":24,"PB":25,"PE":26,"AL":27,"SE":28,"BA":29,
-    "MG":31,"ES":32,"RJ":33,"SP":35,
-    "PR":41,"SC":42,"RS":43,"MS":50,"MT":51,"GO":52,"DF":53,
+    "RO": 11, "AC": 12, "AM": 13, "RR": 14, "PA": 15, "AP": 16, "TO": 17,
+    "MA": 21, "PI": 22, "CE": 23, "RN": 24, "PB": 25, "PE": 26, "AL": 27, "SE": 28, "BA": 29,
+    "MG": 31, "ES": 32, "RJ": 33, "SP": 35,
+    "PR": 41, "SC": 42, "RS": 43, "MS": 50, "MT": 51, "GO": 52, "DF": 53,
 }
 
 
@@ -58,38 +67,48 @@ def already_ok(man, challenge, test, unit):
     return (m["status"] == "ok").any()
 
 
-def do_upload(df, adm_level, adm_1, adm_2, description):
-    import mosqlient
-    return mosqlient.upload_prediction(
-        api_key=API_KEY, repository=REPOSITORY, disease=DISEASE,
-        description=description, commit=COMMIT, prediction=df,
-        adm_level=adm_level, case_definition=CASE_DEF, published=PUBLISHED,
-        adm_0="BRA", adm_1=adm_1, adm_2=adm_2,
+def do_upload(df, adm_1, adm_2, adm_level, description):
+    from mosqlient import upload_prediction
+    kw = dict(
+        api_key=API_KEY, repository=REPOSITORY, description=description,
+        commit=COMMIT, disease=DISEASE, case_definition=CASE_DEF,
+        adm_level=adm_level, published=PUBLISHED, prediction=df,
     )
+    # a API exige adm_1 sempre que adm_level >= 1 (inclui município);
+    # p/ município mandamos também o adm_2 (geocode).
+    if adm_1 is not None:
+        kw["adm_1"] = adm_1
+    if adm_2 is not None:
+        kw["adm_2"] = adm_2
+    return upload_prediction(**kw)
 
 
 def process_unit(challenge, test, year, unit, csv_path, adm_level, man, results):
     if already_ok(man, challenge, test, unit):
-        print(f"    [{unit}] já enviado (skip)"); return
+        print(f"    [{unit}] já enviado (skip)");
+        return
     df = pd.read_csv(csv_path)
     ok, errs = S.validate(df, year, verbose=False)
     if not ok:
         print(f"    [{unit}] ❌ inválido: {errs}")
-        results.append((challenge, test, unit, "invalido", ";".join(errs))); return
+        results.append((challenge, test, unit, "invalido", ";".join(errs)));
+        return
 
     if adm_level == 1:
         adm_1, adm_2 = UF_SIGLA_TO_CODE[unit], None
-    else:
-        adm_1, adm_2 = None, int(unit)
-    desc = f"3rd IMDC dengue {'UF' if adm_level==1 else 'municipio'} " \
-           f"| validacao teste {test} ({year}-{year+1}) | {unit}"
+    else:  # adm_level 2: unit é o geocode
+        adm_2 = int(unit)
+        adm_1 = int(str(unit)[:2])  # UF derivada dos 2 primeiros dígitos
+    desc = f"3rd IMDC dengue {'UF' if adm_level == 1 else 'municipio'} " \
+           f"| validacao teste {test} ({year}-{year + 1}) | {unit}"
 
     if DRY_RUN:
         print(f"    [{unit}] ✅ válido — DRY_RUN (adm_level={adm_level}, "
               f"adm_1={adm_1}, adm_2={adm_2}, {len(df)} semanas)")
-        results.append((challenge, test, unit, "dry_run", "")); return
+        results.append((challenge, test, unit, "dry_run", ""));
+        return
     try:
-        do_upload(df, adm_level, adm_1, adm_2, desc)
+        do_upload(df, adm_1, adm_2, adm_level, desc)
         print(f"    [{unit}] ⬆️ enviado")
         results.append((challenge, test, unit, "ok", ""))
     except Exception as e:
@@ -99,23 +118,28 @@ def process_unit(challenge, test, year, unit, csv_path, adm_level, man, results)
 
 
 def main():
+    global API_KEY
+    API_KEY = normalize_api_key(API_KEY)
     if not DRY_RUN:
-        import inspect, mosqlient
-        print("assinatura:", inspect.signature(mosqlient.upload_prediction), "\n")
+        assert API_KEY, "API_KEY vazia — defina no arquivo .env (API_KEY=usuario:chave)"
+        assert API_KEY.count(":") == 1, (
+            f"API_KEY deve ter o formato 'usuario:chave' (um único ':'). "
+            f"Recebido com {API_KEY.count(':')} ':' — confira se não colou o rótulo "
+            f"'X-UID-Key:' ou um valor extra junto.")
+        assert "/" in REPOSITORY and REPOSITORY != "seu_usuario/seu_repo", "preencha REPOSITORY"
+        assert COMMIT != "COLE_O_COMMIT_HASH", "preencha COMMIT"
 
     man = load_manifest()
     results = []
     for test, year in TESTS:
-        print(f"\n===== Teste {test} — temporada {year}-{year+1} =====")
-        # cidade (adm_level 2)
+        print(f"\n===== Teste {test} — temporada {year}-{year + 1} =====")
         cdir = os.path.join(SUB_DIR, "dengue_city", f"test{test}_{year}")
         print(f"  [CIDADE] {cdir}")
         for f in sorted(glob.glob(os.path.join(cdir, "*.csv"))):
-            if os.path.basename(f).startswith("_"):  # pula agregados _todas
+            if os.path.basename(f).startswith("_"):
                 continue
             geocode = os.path.splitext(os.path.basename(f))[0]
             process_unit("dengue_city", test, year, geocode, f, 2, man, results)
-        # estado (adm_level 1)
         sdir = os.path.join(SUB_DIR, "dengue_state", f"test{test}_{year}")
         print(f"  [ESTADO] {sdir}")
         for f in sorted(glob.glob(os.path.join(sdir, "*.csv"))):
@@ -124,7 +148,6 @@ def main():
             uf = os.path.splitext(os.path.basename(f))[0]
             process_unit("dengue_state", test, year, uf, f, 1, man, results)
 
-    # atualiza manifesto (append + dedup por challenge/test/unit mantendo o último)
     new = pd.DataFrame(results, columns=["challenge", "test", "unit", "status", "msg"]).astype(str)
     full = pd.concat([man, new], ignore_index=True) if len(man) else new
     full = full.drop_duplicates(subset=["challenge", "test", "unit"], keep="last")
