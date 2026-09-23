@@ -187,3 +187,6 @@ data/processed/dataset_tft_completo.csv
 data/processed/dataset_inference.parquet
 .idea/workspace.xml
 data/processed/dataset_tft_completo.parquet
+
+# tabela semanal gerada por src/preprocess.py (147 MB, acima do limite do GitHub)
+data/processed/base_weekly.parquet

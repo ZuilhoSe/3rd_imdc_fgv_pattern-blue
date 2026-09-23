@@ -1,0 +1,9 @@
+modelo teste      desafio  wis_medio  wis_mediana  n
+    v2 test1  dengue_city      114.5         14.0 15
+    v2 test1 dengue_state      459.3        166.3 26
+    v2 test2  dengue_city      187.2         65.6 15
+    v2 test2 dengue_state    3,299.4        138.3 26
+    v2 test3  dengue_city      161.4         39.3 15
+    v2 test3 dengue_state      422.4        106.4 26
+    v2 test4  dengue_city       33.9         17.2 15
+    v2 test4 dengue_state      293.1         97.1 26

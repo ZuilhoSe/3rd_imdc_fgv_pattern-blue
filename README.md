@@ -16,13 +16,17 @@ It follows a **two-stage, parameter-based** design:
    Transformer (TFT) is trained across all municipalities. Given 52 weeks of
    epidemiological and climatic history, it predicts the parameters of the
    Richards curve that the [Episcanner](https://api.mosqlimate.org/) pipeline
-   fits to each epidemic season. The target is **shifted by one season**, so
-   from data available up to EW25 of year *Y* the model predicts the descriptors
-   of the upcoming *Y*/*Y+1* season.
+   fits to each epidemic season. A sample whose decoder week falls in year *X*
+   is labelled with the descriptors of the **next** season (EW41/*X* –
+   EW40/*X+1*), so from data available up to EW25 of year *Y* the model
+   predicts the upcoming *Y*/*Y+1* season.
 2. **Reconstructing the weekly curve.** The predicted parameters are turned
    into a weekly incidence curve through the Richards equation (see
    *Predictive Uncertainty*). State-level forecasts are obtained by summing the
-   reconstructed municipal curves within each state.
+   reconstructed curves of **all** municipalities within each state.
+
+One model is trained per forecast cut-off (the four validation tests and the
+final forecast), each using only information available at that cut-off.
 
 ---
 
@@ -53,7 +57,7 @@ Pattern-Blue/
 ├── .gitattributes
 ├── data/
 │   ├── raw/                      # inputs from the Mosqlimate FTP/API + external open sources
-│   └── processed/                # model-ready tables (e.g. dataset_tft_completo.parquet)
+│   └── processed/                # model-ready tables (base_weekly.parquet, season_targets.parquet)
 ├── Demo Notebooks/               # official platform demos, kept for reference
 │   ├── Python demo.ipynb
 │   ├── R demo.Rmd
@@ -70,15 +74,16 @@ Pattern-Blue/
 │       └── target_distributions.png
 ├── img/
 └── src/
-    ├── train.py                  # TFT training (pytorch-forecasting + Lightning)
-    ├── models.py                 # model/architecture definitions and helpers
-    ├── run_inference.py          # checkpoint -> Episcanner/Richards parameter quantiles per municipality
+    ├── preprocess.py             # raw FTP files (+ 2026 updates) -> base_weekly.parquet + season_targets.parquet
+    ├── common.py                 # cut-offs, features, season targets, TimeSeriesDataSet construction
+    ├── train.py                  # one TFT per cut-off (test1..4, final) -> models/checkpoints/<tag>/best.ckpt
+    ├── run_inference.py          # checkpoint -> Richards parameter quantiles for all 5,570 municipalities
     ├── build_submissions.py      # parameters -> weekly curves -> validated submission CSVs (city + state)
     ├── imdc_submission.py        # Richards reconstruction, Monte Carlo uncertainty, formatting & validation
+    ├── evaluate.py               # WIS of the validation submissions; calibrates the state-level correlation
     ├── upload.py                 # uploads validated CSVs to the platform via mosqlient
-    ├── models/                   # saved checkpoints (e.g. checkpoints/tft-epoch=08-val_loss=194.65.ckpt)
-    ├── outputs/                  # generated parameter quantiles + submission CSVs
-    └── lightning_logs/           # training logs (TensorBoard)
+    ├── models/                   # checkpoints/<tag>/best.ckpt + TensorBoard logs
+    └── outputs/                  # parameter quantiles, submission CSVs, evaluation, upload manifests
 ```
 
 ---
@@ -90,7 +95,6 @@ Pattern-Blue/
 - `pytorch-forecasting` (TFT, `TimeSeriesDataSet`, `QuantileLoss`, `MultiLoss`, `GroupNormalizer`)
 - `pandas`, `numpy`, `pyarrow` (parquet I/O)
 - `epiweeks` (MMWR/Brazilian epidemiological-week ↔ date conversion)
-- `giotto-tda` (or `ripser`) — rolling persistent-homology (TDA) features on incidence
 - `mosqlient` (≥ 2.5) — platform data access and prediction upload
 - `python-dotenv` — loads the platform `API_KEY` from a `.env` file
 
@@ -116,82 +120,91 @@ public and are shared with the organizers (see *Data Usage Restriction*).
 | Weekly dengue cases (`casos`) | Infodengue / Mosqlimate         | target reconstruction input; `incidence` |
 | Climate time series (`temp_med`, `precip_med`, `rel_humid_med`) | Copernicus ERA5 via Mosqlimate  | model inputs |
 | Seasonal climate forecast (`forecast_temp_med`, `forecast_umid_med`, `forecast_precip_tot`) | Mosqlimate                      | known future covariates |
-| Ocean/climate indices (`enso`, `iod`, `pdo`) | NOAA (monthly)                  | engineered covariates |
+| Ocean/climate indices (`enso`, `iod`, `pdo`) | NOAA via Mosqlimate (weekly)    | merged, not a model input |
 | Population by municipality/year | IBGE                            | `log_pop` |
 | Environmental descriptors (`koppen`, `biome`) | Mosqlimate            | static categoricals |
 | Health regions (`macroregion_name`, `regional_name`) | Ministry of Health / Mosqlimate | static categoricals |
-| Episcanner Richards parameters (`R0`, `peak_week`, `total_cases`, `alpha`, `beta`, `gamma`) | Mosqlimate Episcanner           | **prediction targets** |
+| Episcanner Richards parameters (`peak_week`, `alpha`, `beta`) + observed season totals | Mosqlimate Episcanner / Infodengue | **prediction targets** |
 
 **Engineered variables**
 
 - Temporal: `time_idx`, `week_of_year`, `week_cycle` (season-centered so EW41→week 1),
-  `sin_week_cycle`, `cos_week_cycle`.
-- Epidemiological: `incidence` = `casos` / population × 100,000.
-- Topological (TDA): `tda_entropy_H0/H1`, `tda_amplitude_H0/H1` from rolling
-  persistent homology of the incidence series.
+  `sin_week_cycle`, `cos_week_cycle`, `season` (season end year, from the
+  epidemiological year).
+- Epidemiological: `log_casos = log1p(casos)`, `log_incidence = log1p(casos / population × 100,000)`.
 
 **Variable roles in the TFT**
 
 - **Static categoricals:** `uf`, `koppen`, `biome`, `macroregion_name`
-- **Time-varying known reals:** `time_idx`, `week_cycle`, `sin_week_cycle`,
+- **Time-varying known reals:** `week_cycle`, `sin_week_cycle`,
   `cos_week_cycle`, `log_pop`, `forecast_temp_med`, `forecast_precip_tot`
-- **Time-varying unknown reals:** `casos`, `incidence`, `temp_med`,
+  (`time_idx` only indexes the series; as a covariate it let the model memorise years)
+- **Time-varying unknown reals:** `log_casos`, `log_incidence`, `temp_med`,
   `precip_med`, `rel_humid_med`
-- **Targets:** `R0`, `peak_week`, `log_total_cases`, `alpha`, `beta`, `gamma`
-  (of these, only `total_cases`, `alpha`, `beta`, `peak_week` are needed for
-  reconstruction — `R0` and `gamma` are deterministic functions of `alpha` and
-  the growth rate and are therefore redundant).
+- **Targets (next season):** `log_total_cases` (log1p of the observed season
+  total), `alpha`, `beta`, `peak_week` (index of the peak week within the
+  season, EW41 = 0). `R0` and `gamma` are deterministic functions of `alpha`
+  and the growth rate and are not modelled.
 
-> The pipeline also derives ocean indices and TDA features; document precisely
-> which of these entered the **final** trained checkpoint, as some may be
-> disabled in the training configuration.
+Seasons where Episcanner has no Richards fit (fewer than 50 cases, or failed
+fit) are **kept**: they get their observed total and a shape imputed from the
+median fitted shape of the municipality → health region → state → country,
+computed only from seasons available at the cut-off. This lets the state
+totals include every municipality.
+
+Ocean indices (ENSO/IOD/PDO) are merged in the base table but are not model
+inputs; the TDA features of earlier experiments are not used.
 
 ---
 
 ## Model Training
 
-**Task.** Multi-output regression of the six Episcanner Richards descriptors for
-the upcoming season, per municipality, from a 52-week look-back window.
+**Task.** Multi-output quantile regression of four season descriptors for the
+upcoming season, per municipality, from a 52-week look-back window.
+
+**Samples and leakage control.** For the cut-off EW25/*Y*:
+
+- training samples have their decoder week in EW20–EW32 of year *X* and the
+  season *X*/*X+1* as target, for seasons ending ≤ *Y*−2;
+- early stopping uses the decoder at EW26 of year *Y*−2 and the last complete
+  season (ending *Y*−1);
+- the target normalizer (per `geocode`) is fitted only on seasons complete
+  before the cut-off;
+- at inference, the encoder ends at EW25/*Y* and a synthetic EW26/*Y* decoder
+  row carries only known covariates.
+
+A separate model is trained for each of the four validation cut-offs and the
+final forecast (EW25/2026 → season 2026–27).
 
 **Architecture / configuration** (`pytorch-forecasting` `TemporalFusionTransformer`):
 
-- Encoder length: 52 weeks (min 20); prediction length: 1 (season-shifted target).
+- Encoder length: 52 weeks (min 20); prediction length: 1.
 - `hidden_size=32`, `attention_head_size=2`, `dropout=0.1`, `hidden_continuous_size=16`.
-- Loss: `MultiLoss` of six `QuantileLoss` heads (`output_size=[7,7,7,7,7,7]`),
-  quantiles `[0.02, 0.10, 0.25, 0.50, 0.75, 0.90, 0.98]`.
-- Target normalization (per `geocode`, `GroupNormalizer`): `softplus` for
-  `R0`, `peak_week`, `beta`, `gamma`; `logit` for `alpha`; none for
-  `log_total_cases` (already `log1p`-transformed).
+- Loss: `MultiLoss` of four `QuantileLoss` heads, quantiles
+  `[0.02, 0.10, 0.25, 0.50, 0.75, 0.90, 0.98]`.
+- Target normalization (per `geocode`, `GroupNormalizer`): none for
+  `log_total_cases` and `peak_week`, `logit` for `alpha`, `log` for `beta`.
 
-**Optimization.**
+**Optimization.** Adam, `learning_rate=0.003`, `reduce_on_plateau_patience=3`,
+`batch_size=256`, 400 batches per epoch, `gradient_clip_val=0.1`, `bf16-mixed`
+on a single GPU; early stopping on `val_loss` and best checkpoint by `val_loss`
+(max. 15 epochs for the final model, 8 for the validation models).
 
-- Optimizer: Adam; `learning_rate=0.03`; `reduce_on_plateau_patience=4`.
-- `batch_size=512`, up to `30` epochs, `gradient_clip_val=0.1`.
-- Trainer: PyTorch Lightning, single GPU, `bf16-mixed` precision.
-- Early stopping on `val_loss` (patience 5); best checkpoint by `val_loss`.
-
-**Reproducing the pipeline.**
+**Reproducing the pipeline** (run from `src/`).
 
 ```bash
-# 1) build the model-ready table
-python src/preprocess.py            # -> data/processed/dataset_tft_completo.parquet
-
-# 2) train
-python src/train.py                 # -> models/checkpoints/tft-*.ckpt
-
-# 3) inference: parameter quantiles per municipality, per validation cutoff
-python src/run_inference.py         # -> outputs/params/params_test{1..4}.parquet
-
-# 4) build validated submissions (city + state)
-python src/build_submissions.py     # -> outputs/submissions/dengue_{city,state}/...
-
-# 5) upload to the platform (needs .env with API_KEY=usuario:chave)
-python src/upload.py                # DRY_RUN=True first, then DRY_RUN=False
+python preprocess.py                 # -> data/processed/{base_weekly,season_targets}.parquet
+python train.py final test1 test2 test3 test4   # -> models/checkpoints/<tag>/best.ckpt
+python run_inference.py              # -> outputs/params/params_<tag>.parquet
+python evaluate.py tune              # -> outputs/state_rho.json (state-level correlation)
+python build_submissions.py          # -> outputs/submissions/dengue_{city,state}/<test{k}_{Y}|final_2026>/
+python evaluate.py outputs/submissions   # WIS of the validation submissions
+python upload.py                     # dry run; DRY_RUN=0 python upload.py to send (needs .env)
 ```
 
 Validation targets follow the challenge protocol: for each season, only data up
 to EW25 of the season's first year is used (2022→2022-23, 2023→2023-24,
-2024→2024-25, 2025→2025-26).
+2024→2024-25, 2025→2025-26); the final forecast uses data up to EW25/2026.
 
 ---
 
@@ -216,11 +229,11 @@ The Episcanner Richards model represents cumulative cases as
 J(t) = L − L · [1 + α · exp(b · (t − t_j))]^(−1/α)
 ```
 
-where `L = total_cases`, `t_j = peak_week`, `α = alpha`, and the growth rate is
-recovered from the SIR mapping `β = b/α` as `b = beta · α` (so
-`R0 = 1/(1−α)`). Weekly incidence is the first difference `J(t) − J(t−1)`,
-clipped at zero, over the season's weeks aligned so that `t_j` lands on the
-predicted peak week.
+where `t` counts weeks from EW41, `t_j = peak_week`, `α = alpha`, and the
+growth rate is recovered from the SIR mapping `β = b/α` as `b = beta · α`
+(so `R0 = 1/(1−α)`). The weekly curve is the first difference
+`J(t) − J(t−1)`, clipped at zero and rescaled so that the season sums to the
+predicted total `L`.
 
 **From parameters to case-level intervals.** The TFT produces predictive
 quantiles for each parameter, but the challenge requires prediction intervals on
@@ -234,17 +247,17 @@ uncertainty by **Monte Carlo**:
    form the `pred` and the 50/80/90/95% intervals.
 
 **State level.** Municipal curves are summed **within each state per Monte Carlo
-draw** before taking percentiles, so state intervals reflect the aggregation
-rather than a naive sum of municipal quantiles.
+draw** before taking percentiles. Because epidemics within a state are
+correlated, the municipal draws share a common factor through a Gaussian copula
+with correlation `rho`, chosen by minimising the WIS on the validation seasons
+(`evaluate.py tune`).
 
 All submissions are enforced to satisfy the platform rules: Sunday dates,
 continuous weekly sequence covering EW41→EW40, non-negativity, and nested
 intervals `lower_95 ≤ … ≤ lower_50 ≤ pred ≤ upper_50 ≤ … ≤ upper_95`.
 
-**Assumptions and limitations.** The Monte Carlo currently treats parameter
-marginals (and municipalities, for state aggregation) as independent; because
-epidemics are spatially and parametrically correlated, this can make aggregated
-intervals narrower than ideal.
+**Assumptions and limitations.** Parameter marginals are sampled independently
+within a municipality; Richards curves have a single peak per season.
 
 ---
 

@@ -2,7 +2,9 @@
 IMDC 2026 — UPLOAD das submissões de validação (dengue) para a plataforma Mosqlimate.
 
 Percorre os CSVs gerados por build_submissions.py e envia uma predição por unidade
-geográfica, por teste de validação, via mosqlient.upload_prediction (v2.5.x).
+geográfica, por conjunto (test1..4 e final 2026-2027), via mosqlient.upload_prediction (v2.5.x).
+
+Uso: python upload.py [tags...]   (padrão: final + test1..4; ex.: python upload.py final)
 
 Assinatura real (mosqlient 2.5.2):
   upload_prediction(api_key, repository, disease, description, commit, prediction,
@@ -15,13 +17,16 @@ Assinatura real (mosqlient 2.5.2):
   - prediction:  DataFrame com date, pred, lower/upper_{50,80,90,95}
 
 SEGURANÇA: começa em DRY_RUN (valida e mostra o que seria enviado, sem enviar).
-Só envia de verdade quando você puser DRY_RUN = False.
+Só envia de verdade com a variável de ambiente DRY_RUN=0.
 """
 import os
+import sys
 import glob
 import time
 import pandas as pd
 import imdc_submission as S
+from build_submissions import folder
+from common import CUTS
 
 try:
     from dotenv import load_dotenv
@@ -36,13 +41,13 @@ COMMIT     = os.getenv("COMMIT", "COLE_O_COMMIT_HASH")         # .env: COMMIT=<g
 DISEASE    = "A90"
 
 SUB_DIR    = "outputs/submissions"
-TESTS      = [(1, 2022), (2, 2023), (3, 2024), (4, 2025)]
+TAGS       = ["final", "test1", "test2", "test3", "test4"]
 
-DRY_RUN    = False
+DRY_RUN    = os.getenv("DRY_RUN", "1") != "0"   # envia de verdade só com DRY_RUN=0
 PUBLISHED  = True
 CASE_DEF   = "probable"
 SLEEP      = 1.0
-MANIFEST   = "outputs/upload_manifest.csv"
+MANIFEST   = "outputs/upload_manifest_v2.csv"   # v1 (modelo antigo) fica em upload_manifest.csv
 # ===========================================================================
 
 def normalize_api_key(k: str) -> str:
@@ -105,8 +110,9 @@ def process_unit(challenge, test, year, unit, csv_path, adm_level, man, results)
     else:  # adm_level 2: unit é o geocode
         adm_2 = int(unit)
         adm_1 = int(str(unit)[:2])  # UF derivada dos 2 primeiros dígitos
+    fase = "forecast" if test == "final" else f"validacao {test}"
     desc = f"3rd IMDC dengue {'UF' if adm_level == 1 else 'municipio'} " \
-           f"| validacao teste {test} ({year}-{year + 1}) | {unit}"
+           f"| {fase} ({year}-{year + 1}) | {unit}"
 
     if DRY_RUN:
         print(f"    [{unit}] ✅ válido — DRY_RUN (adm_level={adm_level}, "
@@ -137,16 +143,17 @@ def main():
 
     man = load_manifest()
     results = []
-    for test, year in TESTS:
-        print(f"\n===== Teste {test} — temporada {year}-{year + 1} =====")
-        cdir = os.path.join(SUB_DIR, "dengue_city", f"test{test}_{year}")
+    for test in (sys.argv[1:] or TAGS):
+        year = CUTS[test]
+        print(f"\n===== {test} — temporada {year}-{year + 1} =====")
+        cdir = os.path.join(SUB_DIR, "dengue_city", folder(test))
         print(f"  [CIDADE] {cdir}")
         for f in sorted(glob.glob(os.path.join(cdir, "*.csv"))):
             if os.path.basename(f).startswith("_"):
                 continue
             geocode = os.path.splitext(os.path.basename(f))[0]
             process_unit("dengue_city", test, year, geocode, f, 2, man, results)
-        sdir = os.path.join(SUB_DIR, "dengue_state", f"test{test}_{year}")
+        sdir = os.path.join(SUB_DIR, "dengue_state", folder(test))
         print(f"  [ESTADO] {sdir}")
         for f in sorted(glob.glob(os.path.join(sdir, "*.csv"))):
             if os.path.basename(f).startswith("_"):
@@ -162,7 +169,7 @@ def main():
     print(f"\nresumo por status:\n{full['status'].value_counts().to_string()}")
     print(f"manifesto -> {MANIFEST}")
     if DRY_RUN:
-        print("\n⚠️ DRY_RUN ativo: nada foi enviado. Ponha DRY_RUN=False para enviar.")
+        print("\n⚠️ DRY_RUN ativo: nada foi enviado. Rode com DRY_RUN=0 para enviar.")
 
 
 if __name__ == "__main__":
