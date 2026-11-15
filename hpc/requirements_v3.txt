@@ -1,0 +1,13 @@
+# Versões da .venv local usada no v3 (Python 3.12.10), congeladas em 2026-11-15.
+# torch: instalar a roda CUDA compatível com o driver do servidor, mantendo a versão 2.6.0.
+torch==2.6.0
+lightning==2.6.1
+pytorch-forecasting==1.7.0
+pandas==2.3.3
+numpy==2.5.0
+pyarrow==22.0.0
+scipy==1.17.1
+scikit-learn==1.9.0
+lmfit==1.3.4
+epiweeks==2.4.0
+tensorboard==2.20.0

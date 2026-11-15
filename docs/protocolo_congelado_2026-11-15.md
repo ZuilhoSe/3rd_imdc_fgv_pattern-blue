@@ -80,4 +80,6 @@ Cada execução, inclusive as que falharem, ganha uma linha em `reports/registro
 
 ## Emendas
 
-(nenhuma)
+### E1 — 2026-11-15, antes de rodar qualquer semente: hardware das sementes
+
+As sementes do v3 rodam no servidor `multigpu` (A100), não na RTX 3050 local. Como a mesma semente em GPUs diferentes não reproduz bit a bit, a semente 42 também é refeita no servidor (`<corte>_s42`), e o C1 passa a ser a média de quantis das 5 sementes rodadas no servidor (1, 2, 3, 4 e 42). A rodada original da semente 42 na RTX 3050 é relatada ao lado como sensibilidade ao hardware. Hiperparâmetros iguais aos de `src/run_v3.sh`; só `NUM_WORKERS` e o paralelismo mudam, e nenhum dos dois altera o modelo. Lista de tags em `hpc/tags_sementes_v3.txt`.
