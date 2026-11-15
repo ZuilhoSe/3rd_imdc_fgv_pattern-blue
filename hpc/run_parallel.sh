@@ -9,7 +9,7 @@ set -u
 LIST=${1:?lista de tags}
 PARALLEL=${PARALLEL:-8}
 export NUM_WORKERS=${NUM_WORKERS:-4}
-export CUDA_VISIBLE_DEVICES=${GPU:-0}
+[ -n "${GPU:-}" ] && export CUDA_VISIBLE_DEVICES=$GPU   # no Slurm, a GPU já vem alocada
 export MAX_EPOCHS=25 PATIENCE=5 FULL_EPOCHS=3          # iguais a src/run_v3.sh
 export PYTHONIOENCODING=utf-8 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
 PY=${PY:-$(pwd)/.venv/bin/python}
