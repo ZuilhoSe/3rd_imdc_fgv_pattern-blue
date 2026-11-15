@@ -10,6 +10,8 @@ Uso (a partir de src/):
   python train.py final            # só a previsão final
   python train.py test1 test2 ...  # validações
   python train.py all
+  python train.py cut2015 cut2016  # origem móvel (common.ROLLING_CUTS)
+  python train.py test1_s1         # sufixo _s<n> = semente n
 Saída: models/checkpoints/<tag>/best.ckpt
 """
 import os
@@ -33,12 +35,11 @@ MAX_EPOCHS = int(os.getenv("MAX_EPOCHS", "15"))
 TRAIN_BATCHES_PER_EPOCH = 400
 LEARNING_RATE = 0.003
 GRADIENT_CLIP_VAL = 0.1
-SEED = 42
 
 
 def train_cut(tag, base):
-    year = C.CUTS[tag]
-    pl.seed_everything(SEED)
+    year = C.cut_year(tag)
+    pl.seed_everything(C.tag_seed(tag))
     print(f"\n==================== {tag}: corte EW{C.CUT_WEEK}/{year} ====================")
     frame, tgt = C.build_training_frame(base, year)
     norm = C.fit_normalizer(tgt)

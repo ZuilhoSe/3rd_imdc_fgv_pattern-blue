@@ -190,3 +190,18 @@ data/processed/dataset_tft_completo.parquet
 
 # tabela semanal gerada por src/preprocess.py (147 MB, acima do limite do GitHub)
 data/processed/base_weekly.parquet
+
+# Fase 0 (2026-11-15): artefatos grandes ou de terceiros ficam fora do git.
+# Os hashes SHA-256 estão em reports/manifesto_artefatos_2026-11-15.sha256
+data/external/
+data/processed/base_weekly_v3.parquet
+data/processed/base_weekly_v4.parquet
+src/models/checkpoints/cut20*/
+src/models/checkpoints/v3/
+src/models/checkpoints/v4/
+src/models/logs/cut20*/
+src/models/logs/v3/
+src/models/logs/v4/
+src/outputs/params/
+src/outputs/rolling/
+src/outputs/v3/

@@ -25,6 +25,22 @@ TARGETS_PATH = "../data/processed/season_targets.parquet"
 CUTS = {"test1": 2022, "test2": 2023, "test3": 2024, "test4": 2025, "final": 2026}
 CUT_WEEK = 25
 
+# avaliação com origem móvel (artigo): 2022-2025 reaproveitam os modelos test1-4
+ROLLING_CUTS = {f"cut{y}": y for y in range(2015, 2022)}
+ALL_CUTS = {**CUTS, **ROLLING_CUTS}
+SEASON_TAGS = {y: t for t, y in ALL_CUTS.items() if t != "final"}   # ano do corte -> tag
+DEFAULT_SEED = 42
+
+
+def cut_year(tag):
+    """'cut2015' ou 'cut2015_s1' -> 2015."""
+    return ALL_CUTS[tag.split("_s")[0]]
+
+
+def tag_seed(tag):
+    """'cut2015_s1' -> 1; sem sufixo -> semente padrão."""
+    return int(tag.split("_s")[1]) if "_s" in tag else DEFAULT_SEED
+
 TARGETS = ["log_total_cases", "alpha", "beta", "peak_week"]
 SHAPE = ["alpha", "beta", "peak_week"]
 QUANTILE_LEVELS = [0.02, 0.10, 0.25, 0.50, 0.75, 0.90, 0.98]  # QuantileLoss default

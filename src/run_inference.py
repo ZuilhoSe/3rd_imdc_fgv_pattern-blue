@@ -26,7 +26,7 @@ OUT_DIR = "outputs/params"
 
 
 def predict_cut(tag, base):
-    year = C.CUTS[tag]
+    year = C.cut_year(tag)
     ckpt = f"models/checkpoints/{tag}/best.ckpt"
     print(f"\n=== {tag}: corte EW{C.CUT_WEEK}/{year} -> temporada {year}-{year + 1} ===")
     frame, tgt = C.build_training_frame(base, year)
@@ -39,7 +39,7 @@ def predict_cut(tag, base):
     model = TemporalFusionTransformer.load_from_checkpoint(
         ckpt, map_location="cuda" if torch.cuda.is_available() else "cpu")
     model.eval()
-    out = model.predict(dl, mode="quantiles", return_index=True)
+    out = model.predict(dl, mode="quantiles", return_index=True, trainer_kwargs=dict(logger=False))
     preds, index = out.output, out.index
     assert (index["time_idx"] == frame["time_idx"].max()).all(), "decoder não está na EW26 do corte"
     geocodes = index["geocode"].astype(str).to_numpy()
