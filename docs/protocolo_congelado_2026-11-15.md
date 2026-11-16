@@ -128,3 +128,14 @@ WIS relativo ao B3 nos cortes EW25 de 2015 a 2024 (`reports/v3/rolling_relative.
 - **Escolhido: C2.** Tem o menor WIS relativo nas UFs. A distância para o segundo (C3) é 0,011, fora da faixa de empate de 0,01; e, se fosse empate, o C2 venceria por ser o mais simples.
 - **Pipeline em chikungunya (seção 6):** B2 e B3 de chikungunya e o C1 de chikungunya, este como média de quantis das sementes 1, 2 e 3, combinados com pesos iguais, como no desenvolvimento. Hiperparâmetros do TFT os de `src/run_v3.sh`, no mesmo servidor da E1.
 - Os 5 candidatos continuam relatados no artigo (seção 5, item 4). Commits dos resultados: `bcee534` (C1), `415e13f` (C2 a C4) e `df11912` (C5).
+
+### E5 — 2026-11-16, antes de qualquer previsão de chikungunya: desvio entre sementes do C2
+
+A seção 6 pede, no critério 3, que a distância até 1 seja maior que o desvio entre sementes, mas não diz como medir esse desvio num ensemble. Para o C2 fica assim:
+
+- Para cada semente s em {1, 2, 3}, monta-se o C2 da semente s: média de quantis, com pesos iguais, de B2, B3 e do TFT da semente s sozinha, com a mesma agregação para UF (escolha de rho) do C2.
+- Calcula-se a métrica primária (WIS relativo ao B3 nas UFs, agregado nos cortes) de cada um dos 3.
+- O desvio entre sementes é o desvio padrão amostral (ddof = 1) desses 3 valores, como em `dp_sementes` de `src/evaluate_v3.py`.
+- O critério 3 vale se 1 − WIS relativo do C2 (com o C1 das 3 sementes) for maior que esse desvio.
+
+Escolhido por medir a variação do que está sendo testado, e não a do TFT sozinho, que a média com B2 e B3 amortece. Registrado antes de qualquer resultado de chikungunya.
