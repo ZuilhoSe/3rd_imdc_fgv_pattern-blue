@@ -298,7 +298,7 @@ def seed_table(sel, level="state", ref="b3"):
     prim = sel[(sel["level"] == level) & sel["cut_year"].isin(range(2015, 2025))]
     per = prim.groupby(["model", "cut_year", "unit"], as_index=False)["wis"].mean()
     wide = per.pivot_table(index=["cut_year", "unit"], columns="model", values="wis")
-    cols = [m for m in [C1, C2, C3, C4] + SEED_MODELS + [PRIMARY] if m in wide.columns]
+    cols = [m for m in [C1, C2, C3, C4, "c5"] + SEED_MODELS + [PRIMARY] if m in wide.columns]
     lr = (np.log(wide[cols] + 1)).sub(np.log(wide[ref] + 1), axis=0).dropna()
     by = lr.groupby("cut_year").mean()
     by.loc["todas"] = by.mean()
@@ -319,7 +319,7 @@ def report():
     off = official_scores(truth)
     # os modelos oficiais têm prefixo próprio: não colidem com os nossos
     all_sc = pd.concat([sel, off], ignore_index=True)
-    ours = [C1, C2, C3, C4] + SEED_MODELS + ["tft_v4", "tft_v4_best", "tft_v3", "tft_v3_best", "v3total_b3forma", "tft_v2", "b3", "b3_v3", "b1", "b2"]
+    ours = [C1, C2, C3, C4, "c5"] + SEED_MODELS + ["tft_v4", "tft_v4_best", "tft_v3", "tft_v3_best", "v3total_b3forma", "tft_v2", "b3", "b3_v3", "b1", "b2"]
     pd.Series({f"{m}|{y}": r for (m, y), r in chosen.items()}, name="rho").to_csv(f"{REPORT}/rho_by_cut.csv")
     rho_final = write_final(chosen)
     print("rho do corte final:", rho_final)

@@ -1,0 +1,4 @@
+accelerate==1.15.0
+chronos-forecasting==2.3.2
+huggingface_hub==2.4.0
+transformers==5.23.0

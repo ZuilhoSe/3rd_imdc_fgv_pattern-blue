@@ -65,36 +65,47 @@ data,id,candidato,conjunto,corte,semente,commit,status,wis_rel_uf,wis_rel_cidade
 2026-11-16,tft_v3_s3_agregado,C1,desenvolvimento,todos_2015_2024,3,bcee534,avaliado,1.036,1.013,,média geométrica das 10 temporadas
 2026-11-16,tft_v3_s4_agregado,C1,desenvolvimento,todos_2015_2024,4,bcee534,avaliado,1.003,1.004,,média geométrica das 10 temporadas
 2026-11-16,tft_v3_s42_agregado,C1,desenvolvimento,todos_2015_2024,42,bcee534,avaliado,0.986,0.995,,média geométrica das 10 temporadas
-2026-11-16,c2_cut2015,C2,desenvolvimento,cut2015,"1,2,3,4,42",,avaliado,0.875,,,"média de quantis de B2, B3 e C1"
-2026-11-16,c2_cut2016,C2,desenvolvimento,cut2016,"1,2,3,4,42",,avaliado,1.045,,,"média de quantis de B2, B3 e C1"
-2026-11-16,c2_cut2017,C2,desenvolvimento,cut2017,"1,2,3,4,42",,avaliado,0.871,,,"média de quantis de B2, B3 e C1"
-2026-11-16,c2_cut2018,C2,desenvolvimento,cut2018,"1,2,3,4,42",,avaliado,0.953,,,"média de quantis de B2, B3 e C1"
-2026-11-16,c2_cut2019,C2,desenvolvimento,cut2019,"1,2,3,4,42",,avaliado,0.924,,,"média de quantis de B2, B3 e C1"
-2026-11-16,c2_cut2020,C2,desenvolvimento,cut2020,"1,2,3,4,42",,avaliado,1.024,,,"média de quantis de B2, B3 e C1"
-2026-11-16,c2_cut2021,C2,desenvolvimento,cut2021,"1,2,3,4,42",,avaliado,0.910,,,"média de quantis de B2, B3 e C1"
-2026-11-16,c2_test1,C2,desenvolvimento,test1,"1,2,3,4,42",,avaliado,0.901,,,"média de quantis de B2, B3 e C1"
-2026-11-16,c2_test2,C2,desenvolvimento,test2,"1,2,3,4,42",,avaliado,0.975,,,"média de quantis de B2, B3 e C1"
-2026-11-16,c2_test3,C2,desenvolvimento,test3,"1,2,3,4,42",,avaliado,0.924,,,"média de quantis de B2, B3 e C1"
-2026-11-16,c2_agregado,C2,desenvolvimento,todos_2015_2024,"1,2,3,4,42",,avaliado,0.939,0.973,,"média de quantis de B2, B3 e C1; média geométrica das 10 temporadas; IC95 UF 0.907-0.976"
-2026-11-16,c3_cut2015,C3,desenvolvimento,cut2015,"1,2,3,4,42",,avaliado,0.926,,,total do C1 com a forma do B3
-2026-11-16,c3_cut2016,C3,desenvolvimento,cut2016,"1,2,3,4,42",,avaliado,1.003,,,total do C1 com a forma do B3
-2026-11-16,c3_cut2017,C3,desenvolvimento,cut2017,"1,2,3,4,42",,avaliado,0.759,,,total do C1 com a forma do B3
-2026-11-16,c3_cut2018,C3,desenvolvimento,cut2018,"1,2,3,4,42",,avaliado,0.953,,,total do C1 com a forma do B3
-2026-11-16,c3_cut2019,C3,desenvolvimento,cut2019,"1,2,3,4,42",,avaliado,0.968,,,total do C1 com a forma do B3
-2026-11-16,c3_cut2020,C3,desenvolvimento,cut2020,"1,2,3,4,42",,avaliado,1.141,,,total do C1 com a forma do B3
-2026-11-16,c3_cut2021,C3,desenvolvimento,cut2021,"1,2,3,4,42",,avaliado,0.887,,,total do C1 com a forma do B3
-2026-11-16,c3_test1,C3,desenvolvimento,test1,"1,2,3,4,42",,avaliado,0.879,,,total do C1 com a forma do B3
-2026-11-16,c3_test2,C3,desenvolvimento,test2,"1,2,3,4,42",,avaliado,1.018,,,total do C1 com a forma do B3
-2026-11-16,c3_test3,C3,desenvolvimento,test3,"1,2,3,4,42",,avaliado,1.018,,,total do C1 com a forma do B3
-2026-11-16,c3_agregado,C3,desenvolvimento,todos_2015_2024,"1,2,3,4,42",,avaliado,0.950,0.959,,total do C1 com a forma do B3; média geométrica das 10 temporadas; IC95 UF 0.892-1.011
-2026-11-16,c4_cut2015,C4,desenvolvimento,cut2015,0,,avaliado,1.069,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
-2026-11-16,c4_cut2016,C4,desenvolvimento,cut2016,0,,avaliado,1.006,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
-2026-11-16,c4_cut2017,C4,desenvolvimento,cut2017,0,,avaliado,0.802,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
-2026-11-16,c4_cut2018,C4,desenvolvimento,cut2018,0,,avaliado,1.238,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
-2026-11-16,c4_cut2019,C4,desenvolvimento,cut2019,0,,avaliado,0.907,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
-2026-11-16,c4_cut2020,C4,desenvolvimento,cut2020,0,,avaliado,0.902,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
-2026-11-16,c4_cut2021,C4,desenvolvimento,cut2021,0,,avaliado,0.958,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
-2026-11-16,c4_test1,C4,desenvolvimento,test1,0,,avaliado,0.998,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
-2026-11-16,c4_test2,C4,desenvolvimento,test2,0,,avaliado,0.964,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
-2026-11-16,c4_test3,C4,desenvolvimento,test3,0,,avaliado,0.972,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
-2026-11-16,c4_agregado,C4,desenvolvimento,todos_2015_2024,0,,avaliado,0.976,0.949,,boosting por quantil do log do total com a forma do B3 (emenda E2); média geométrica das 10 temporadas; IC95 UF 0.914-1.048
+2026-11-16,c2_cut2015,C2,desenvolvimento,cut2015,"1,2,3,4,42",415e13f,avaliado,0.875,,,"média de quantis de B2, B3 e C1"
+2026-11-16,c2_cut2016,C2,desenvolvimento,cut2016,"1,2,3,4,42",415e13f,avaliado,1.045,,,"média de quantis de B2, B3 e C1"
+2026-11-16,c2_cut2017,C2,desenvolvimento,cut2017,"1,2,3,4,42",415e13f,avaliado,0.871,,,"média de quantis de B2, B3 e C1"
+2026-11-16,c2_cut2018,C2,desenvolvimento,cut2018,"1,2,3,4,42",415e13f,avaliado,0.953,,,"média de quantis de B2, B3 e C1"
+2026-11-16,c2_cut2019,C2,desenvolvimento,cut2019,"1,2,3,4,42",415e13f,avaliado,0.924,,,"média de quantis de B2, B3 e C1"
+2026-11-16,c2_cut2020,C2,desenvolvimento,cut2020,"1,2,3,4,42",415e13f,avaliado,1.024,,,"média de quantis de B2, B3 e C1"
+2026-11-16,c2_cut2021,C2,desenvolvimento,cut2021,"1,2,3,4,42",415e13f,avaliado,0.910,,,"média de quantis de B2, B3 e C1"
+2026-11-16,c2_test1,C2,desenvolvimento,test1,"1,2,3,4,42",415e13f,avaliado,0.901,,,"média de quantis de B2, B3 e C1"
+2026-11-16,c2_test2,C2,desenvolvimento,test2,"1,2,3,4,42",415e13f,avaliado,0.975,,,"média de quantis de B2, B3 e C1"
+2026-11-16,c2_test3,C2,desenvolvimento,test3,"1,2,3,4,42",415e13f,avaliado,0.924,,,"média de quantis de B2, B3 e C1"
+2026-11-16,c2_agregado,C2,desenvolvimento,todos_2015_2024,"1,2,3,4,42",415e13f,avaliado,0.939,0.973,,"média de quantis de B2, B3 e C1; média geométrica das 10 temporadas; IC95 UF 0.907-0.976"
+2026-11-16,c3_cut2015,C3,desenvolvimento,cut2015,"1,2,3,4,42",415e13f,avaliado,0.926,,,total do C1 com a forma do B3
+2026-11-16,c3_cut2016,C3,desenvolvimento,cut2016,"1,2,3,4,42",415e13f,avaliado,1.003,,,total do C1 com a forma do B3
+2026-11-16,c3_cut2017,C3,desenvolvimento,cut2017,"1,2,3,4,42",415e13f,avaliado,0.759,,,total do C1 com a forma do B3
+2026-11-16,c3_cut2018,C3,desenvolvimento,cut2018,"1,2,3,4,42",415e13f,avaliado,0.953,,,total do C1 com a forma do B3
+2026-11-16,c3_cut2019,C3,desenvolvimento,cut2019,"1,2,3,4,42",415e13f,avaliado,0.968,,,total do C1 com a forma do B3
+2026-11-16,c3_cut2020,C3,desenvolvimento,cut2020,"1,2,3,4,42",415e13f,avaliado,1.141,,,total do C1 com a forma do B3
+2026-11-16,c3_cut2021,C3,desenvolvimento,cut2021,"1,2,3,4,42",415e13f,avaliado,0.887,,,total do C1 com a forma do B3
+2026-11-16,c3_test1,C3,desenvolvimento,test1,"1,2,3,4,42",415e13f,avaliado,0.879,,,total do C1 com a forma do B3
+2026-11-16,c3_test2,C3,desenvolvimento,test2,"1,2,3,4,42",415e13f,avaliado,1.018,,,total do C1 com a forma do B3
+2026-11-16,c3_test3,C3,desenvolvimento,test3,"1,2,3,4,42",415e13f,avaliado,1.018,,,total do C1 com a forma do B3
+2026-11-16,c3_agregado,C3,desenvolvimento,todos_2015_2024,"1,2,3,4,42",415e13f,avaliado,0.950,0.959,,total do C1 com a forma do B3; média geométrica das 10 temporadas; IC95 UF 0.892-1.011
+2026-11-16,c4_cut2015,C4,desenvolvimento,cut2015,0,415e13f,avaliado,1.069,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
+2026-11-16,c4_cut2016,C4,desenvolvimento,cut2016,0,415e13f,avaliado,1.006,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
+2026-11-16,c4_cut2017,C4,desenvolvimento,cut2017,0,415e13f,avaliado,0.802,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
+2026-11-16,c4_cut2018,C4,desenvolvimento,cut2018,0,415e13f,avaliado,1.238,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
+2026-11-16,c4_cut2019,C4,desenvolvimento,cut2019,0,415e13f,avaliado,0.907,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
+2026-11-16,c4_cut2020,C4,desenvolvimento,cut2020,0,415e13f,avaliado,0.902,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
+2026-11-16,c4_cut2021,C4,desenvolvimento,cut2021,0,415e13f,avaliado,0.958,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
+2026-11-16,c4_test1,C4,desenvolvimento,test1,0,415e13f,avaliado,0.998,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
+2026-11-16,c4_test2,C4,desenvolvimento,test2,0,415e13f,avaliado,0.964,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
+2026-11-16,c4_test3,C4,desenvolvimento,test3,0,415e13f,avaliado,0.972,,,boosting por quantil do log do total com a forma do B3 (emenda E2)
+2026-11-16,c4_agregado,C4,desenvolvimento,todos_2015_2024,0,415e13f,avaliado,0.976,0.949,,boosting por quantil do log do total com a forma do B3 (emenda E2); média geométrica das 10 temporadas; IC95 UF 0.914-1.048
+2026-11-16,c5_cut2015,C5,desenvolvimento,cut2015,0,1541f02,avaliado,0.912,,,"Chronos-Bolt Small zero-shot, direto por UF e cidade (emenda E3); intervalos 90/95 iguais ao de 80"
+2026-11-16,c5_cut2016,C5,desenvolvimento,cut2016,0,1541f02,avaliado,1.213,,,"Chronos-Bolt Small zero-shot, direto por UF e cidade (emenda E3); intervalos 90/95 iguais ao de 80"
+2026-11-16,c5_cut2017,C5,desenvolvimento,cut2017,0,1541f02,avaliado,0.538,,,"Chronos-Bolt Small zero-shot, direto por UF e cidade (emenda E3); intervalos 90/95 iguais ao de 80"
+2026-11-16,c5_cut2018,C5,desenvolvimento,cut2018,0,1541f02,avaliado,1.014,,,"Chronos-Bolt Small zero-shot, direto por UF e cidade (emenda E3); intervalos 90/95 iguais ao de 80"
+2026-11-16,c5_cut2019,C5,desenvolvimento,cut2019,0,1541f02,avaliado,1.061,,,"Chronos-Bolt Small zero-shot, direto por UF e cidade (emenda E3); intervalos 90/95 iguais ao de 80"
+2026-11-16,c5_cut2020,C5,desenvolvimento,cut2020,0,1541f02,avaliado,0.884,,,"Chronos-Bolt Small zero-shot, direto por UF e cidade (emenda E3); intervalos 90/95 iguais ao de 80"
+2026-11-16,c5_cut2021,C5,desenvolvimento,cut2021,0,1541f02,avaliado,0.978,,,"Chronos-Bolt Small zero-shot, direto por UF e cidade (emenda E3); intervalos 90/95 iguais ao de 80"
+2026-11-16,c5_test1,C5,desenvolvimento,test1,0,1541f02,avaliado,1.112,,,"Chronos-Bolt Small zero-shot, direto por UF e cidade (emenda E3); intervalos 90/95 iguais ao de 80"
+2026-11-16,c5_test2,C5,desenvolvimento,test2,0,1541f02,avaliado,1.072,,,"Chronos-Bolt Small zero-shot, direto por UF e cidade (emenda E3); intervalos 90/95 iguais ao de 80"
+2026-11-16,c5_test3,C5,desenvolvimento,test3,0,1541f02,avaliado,1.658,,,"Chronos-Bolt Small zero-shot, direto por UF e cidade (emenda E3); intervalos 90/95 iguais ao de 80"
+2026-11-16,c5_agregado,C5,desenvolvimento,todos_2015_2024,0,1541f02,avaliado,1.009,1.008,,"Chronos-Bolt Small zero-shot, direto por UF e cidade (emenda E3); intervalos 90/95 iguais ao de 80; IC95 UF 0.849-1.179"
