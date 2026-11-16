@@ -33,8 +33,8 @@ import common as C
 import imdc_submission as S
 from preprocess import season_start
 
-OUT = "outputs/rolling"
-REPORT = "../reports/rolling"
+OUT = f"outputs/rolling{C.SUFFIX}"
+REPORT = f"../reports/rolling{C.SUFFIX}"
 CUT_YEARS = list(range(2015, 2026))
 PRIMARY = list(range(2015, 2025))      # 2025/26 só tem dados até EW25/2026
 RHOS = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9, 1.0]
@@ -48,7 +48,7 @@ PARAM_MODELS = {"b3": "params_b3_{y}.parquet"}
 def load_truth():
     b = pd.read_parquet(C.BASE_PATH, columns=["geocode", "date", "casos", "uf", "season"])
     b["geocode"] = b["geocode"].astype(str)
-    city = b[b["geocode"].isin(B.DENGUE_CITIES)].rename(columns={"geocode": "unit"})[["unit", "date", "casos", "season"]]
+    city = b[b["geocode"].isin(B.CITIES)].rename(columns={"geocode": "unit"})[["unit", "date", "casos", "season"]]
     state = (b[b["uf"] != B.EXCLUDE_UF].groupby(["uf", "date", "season"], as_index=False)["casos"].sum()
              .rename(columns={"uf": "unit"}))
     out = {}

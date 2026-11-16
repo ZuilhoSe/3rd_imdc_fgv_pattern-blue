@@ -139,3 +139,16 @@ A seção 6 pede, no critério 3, que a distância até 1 seja maior que o desvi
 - O critério 3 vale se 1 − WIS relativo do C2 (com o C1 das 3 sementes) for maior que esse desvio.
 
 Escolhido por medir a variação do que está sendo testado, e não a do TFT sozinho, que a média com B2 e B3 amortece. Registrado antes de qualquer resultado de chikungunya.
+
+### E6 — 2026-11-16, antes de qualquer previsão de chikungunya: dados, cortes e verdade do confirmatório
+
+Feita depois do pré-processamento de chikungunya (`src/preprocess_chik.py`, que só monta tabelas) e antes de qualquer baseline, treino ou previsão. Nada de chikungunya foi pontuado.
+
+- **Início da série:** a série de chikungunya do FTP começa na EW01/2014 (domingo 2013-12-29) nos 5.570 municípios. As semanas anteriores saem da base em vez de virar zero. A temporada 2014 fica incompleta e não vira alvo; a primeira temporada completa é a 2015.
+- **Cortes (seção 6):** cada corte de 2017 a 2024 tem pelo menos 2 temporadas completas antes dele (o de 2017 tem 2015 e 2016). Nenhum corte é retirado: são 8 temporadas.
+- **Ajustes de Richards:** os do episcanner para `disease == "chikungunya"` (`data/processed/episcanner_results_2026.csv`), temporadas 2015 a 2025, 2.885 municípios-temporada. A regra de reajuste do v3 (temporadas com 50 casos ou mais sem ajuste, aceito se R² ≥ 0,95) não encontrou nenhuma temporada para reajustar. O B3 usa esses ajustes, como o B3 de dengue usa os do episcanner.
+- **Troca das séries (seção 6):** casos e incidência passam a ser de chikungunya; `log_casos_chik` passa a ser o log dos casos de dengue. O resto da base não muda.
+- **Cidades:** as 10 do Optional Challenge 3 (https://sprint.mosqlimate.org/instructions/, consultado em 2026-11-16): 2211001 Teresina, 2931350 Teixeira de Freitas, 3143302 Montes Claros, 3119401 Coronel Fabriciano, 1721000 Palmas, 1716109 Paraíso do Tocantins, 4104808 Cascavel, 4219507 Xanxerê, 5103403 Cuiabá e 5102637 Campo Novo do Parecis.
+- **Verdade:** os casos de chikungunya de `data/raw/` (os mesmos hashes da seção 1). Em dengue a avaliação usou os observados oficiais do IMDC (`data/external/imdc_results/`), que não existem localmente para chikungunya; a seção 1 proíbe baixar dados novos até 2026-11-28. Nas UFs, a verdade é a soma dos municípios, sem o ES.
+- **rho:** a mesma regra do desenvolvimento (cortes ≤ Y-2, grade 0,5, 0,8 e 1,0, padrão 0,5), aplicada só aos cortes de chikungunya. Os cortes de 2017 e 2018 ficam com 0,5.
+- **Código:** `src/confirmatorio_chik.py` (B2, B3, combinações, pontuação única e critério); TFT pelo `src/train_v3.py` e `src/infer_v3.py` com `DOENCA=chik`, tags em `hpc/tags_chik.txt`.

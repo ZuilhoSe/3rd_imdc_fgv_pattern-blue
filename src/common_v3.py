@@ -12,11 +12,11 @@ from pytorch_forecasting.metrics import MultiLoss, QuantileLoss
 
 import common as C
 
-BASE_PATH = "../data/processed/base_weekly_v3.parquet"
-TARGETS_PATH = "../data/processed/season_targets_v3.parquet"
-CKPT_ROOT = "models/checkpoints/v3"
-LOG_ROOT = "models/logs/v3"
-PARAMS_DIR = "outputs/params/v3"
+BASE_PATH = f"../data/processed/base_weekly_v3{C.SUFFIX}.parquet"
+TARGETS_PATH = f"../data/processed/season_targets_v3{C.SUFFIX}.parquet"
+CKPT_ROOT = f"models/checkpoints/v3{C.SUFFIX}"
+LOG_ROOT = f"models/logs/v3{C.SUFFIX}"
+PARAMS_DIR = f"outputs/params/v3{C.SUFFIX}"
 
 TIME_VARYING_KNOWN_REALS = C.TIME_VARYING_KNOWN_REALS + ["forecast_umid_med"]
 TIME_VARYING_UNKNOWN_REALS = C.TIME_VARYING_UNKNOWN_REALS + [

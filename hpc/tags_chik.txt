@@ -1,0 +1,26 @@
+# Confirmatório B (protocolo, seção 6; emendas E4 e E6): C1 de chikungunya, sementes 1, 2 e 3, cortes 2017 a 2024.
+# Rodar com DOENCA=chik; uma tag por linha, o sufixo _s<n> define a semente.
+test3_s1
+test2_s1
+test1_s1
+cut2021_s1
+cut2020_s1
+cut2019_s1
+cut2018_s1
+cut2017_s1
+test3_s2
+test2_s2
+test1_s2
+cut2021_s2
+cut2020_s2
+cut2019_s2
+cut2018_s2
+cut2017_s2
+test3_s3
+test2_s3
+test1_s3
+cut2021_s3
+cut2020_s3
+cut2019_s3
+cut2018_s3
+cut2017_s3

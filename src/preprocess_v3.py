@@ -110,8 +110,8 @@ def fit_richards(weekly):
     return dict(alpha=v["a1"].value, beta=v["b1"].value / v["a1"].value, tp=v["tp1"].value, r2=r2)
 
 
-def refit_targets(base):
-    t = pd.read_parquet(f"{PROC}/season_targets.parquet")
+def refit_targets(base, src=f"{PROC}/season_targets.parquet", dst=f"{PROC}/season_targets_v3.parquet"):
+    t = pd.read_parquet(src)
     t["refit"] = False
     todo = t[(~t["has_fit"]) & (t["obs_total"] >= 50)]
     print(f"\nreajustando {len(todo)} temporadas sem ajuste e com >= 50 casos", flush=True)
@@ -125,7 +125,7 @@ def refit_targets(base):
             t.loc[i, "has_fit"] = True
             t.loc[i, "refit"] = True
     print("reajustadas:", int(t["refit"].sum()), "| com ajuste agora:", int(t["has_fit"].sum()), flush=True)
-    t.to_parquet(f"{PROC}/season_targets_v3.parquet", index=False)
+    t.to_parquet(dst, index=False)
 
 
 if __name__ == "__main__":

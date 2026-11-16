@@ -16,10 +16,10 @@ import sys
 import numpy as np
 import pandas as pd
 import imdc_submission as S
-from common import CUTS, QUANTILE_LEVELS as QS
+from common import CUTS, DOENCA, SUFFIX, QUANTILE_LEVELS as QS
 
-PARAMS_DIR = "outputs/params"
-OUT_DIR = "outputs/submissions"
+PARAMS_DIR = f"outputs/params{SUFFIX}"
+OUT_DIR = f"outputs/submissions{SUFFIX}"
 RHO_PATH = "outputs/state_rho.json"   # gerado por evaluate.py (correlação entre municípios)
 
 DENGUE_CITIES = {  # geocode -> nome (Optional Challenge 1)
@@ -32,6 +32,12 @@ DENGUE_CITIES = {  # geocode -> nome (Optional Challenge 1)
     "5201405": "Aparecida de Goiania-GO", "5102637": "Campo Novo do Parecis-MT",
     "5215231": "Novo Gama-GO",
 }
+CHIK_CITIES = {  # Optional Challenge 3, https://sprint.mosqlimate.org/instructions/ (consultado em 2026-11-16)
+    "2211001": "Teresina-PI", "2931350": "Teixeira de Freitas-BA", "3143302": "Montes Claros-MG",
+    "3119401": "Coronel Fabriciano-MG", "1721000": "Palmas-TO", "1716109": "Paraiso do Tocantins-TO",
+    "4104808": "Cascavel-PR", "4219507": "Xanxere-SC", "5103403": "Cuiaba-MT", "5102637": "Campo Novo do Parecis-MT",
+}
+CITIES = CHIK_CITIES if DOENCA == "chik" else DENGUE_CITIES
 UF_CODE = {  # 2 primeiros dígitos do geocode -> sigla
     "11": "RO", "12": "AC", "13": "AM", "14": "RR", "15": "PA", "16": "AP", "17": "TO",
     "21": "MA", "22": "PI", "23": "CE", "24": "RN", "25": "PB", "26": "PE", "27": "AL", "28": "SE", "29": "BA",
@@ -69,7 +75,7 @@ def stack(rows, geocodes):
 
 
 def city_frames(rows, year):
-    return {gc: S.city_submission(year, rows[gc], QS, D=3000) for gc in DENGUE_CITIES}
+    return {gc: S.city_submission(year, rows[gc], QS, D=3000) for gc in CITIES}
 
 
 def state_frames(rows, year, rho):

@@ -205,3 +205,8 @@ src/models/logs/v4/
 src/outputs/params/
 src/outputs/rolling/
 src/outputs/v3/
+
+# Confirmatório B (emenda E6): bases de chikungunya geradas por src/preprocess_chik.py
+data/processed/base_weekly_chik.parquet
+data/processed/base_weekly_v3_chik.parquet
+src/models/checkpoints/v3_chik/

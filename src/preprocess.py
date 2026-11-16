@@ -130,14 +130,14 @@ def build_base():
     return df
 
 
-def build_season_targets(base):
-    """total observado por (município, temporada) + parâmetros Richards (quando houver)."""
+def build_season_targets(base, disease="dengue"):
+    """total observado por (município, temporada) + parâmetros Richards do episcanner (quando houver)."""
     obs = base.groupby(["geocode", "season"]).agg(obs_total=("casos", "sum"), n_weeks=("casos", "size")).reset_index()
     # só temporadas completas (52/53 semanas) viram alvo
     obs = obs[obs["n_weeks"] >= 52].drop(columns="n_weeks")
 
     epi = pd.read_csv(f"{PROC}/episcanner_results_2026.csv")
-    epi = epi[(epi["disease"] == "dengue") & (epi["success"])].rename(columns={"season_end_year": "season"})
+    epi = epi[(epi["disease"] == disease) & (epi["success"])].rename(columns={"season_end_year": "season"})
     # peak_week (YYYYWW) -> índice na temporada (0 = EW41 do ano anterior)
     peak_date = epi["peak_week"].astype(int).astype(str).map(lambda s: pd.Timestamp(Week.fromstring(s, system="cdc").startdate()))
     start = epi["season"].map(season_start)

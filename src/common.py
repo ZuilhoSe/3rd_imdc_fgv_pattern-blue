@@ -12,14 +12,21 @@ Formulação (corrigida):
     (mediana do município -> região de saúde -> UF -> global), só com dados <= corte;
   * normalizador dos alvos ajustado apenas nas temporadas conhecidas no corte.
 """
+import os
 import numpy as np
 import pandas as pd
 from epiweeks import Week
 from pytorch_forecasting import TimeSeriesDataSet
 from pytorch_forecasting.data import GroupNormalizer, MultiNormalizer
 
-BASE_PATH = "../data/processed/base_weekly.parquet"
-TARGETS_PATH = "../data/processed/season_targets.parquet"
+# doença-alvo: dengue (padrão) ou chikungunya (confirmatório B do protocolo congelado, seção 6).
+# Com DOENCA=chik, todos os artefatos ganham o sufixo _chik e nada de dengue é tocado.
+DOENCA = os.getenv("DOENCA", "dengue")
+assert DOENCA in ("dengue", "chik"), f"DOENCA desconhecida: {DOENCA}"
+SUFFIX = "" if DOENCA == "dengue" else f"_{DOENCA}"
+BASE_PATH = f"../data/processed/base_weekly{SUFFIX}.parquet"
+TARGETS_PATH = f"../data/processed/season_targets{SUFFIX}.parquet"
+GEO_PATH = "../data/processed/base_weekly.parquet"   # UF e regional não dependem da doença
 
 # tag -> ano Y do corte (dados até EW25/Y; prevê a temporada EW41/Y - EW40/Y+1)
 CUTS = {"test1": 2022, "test2": 2023, "test3": 2024, "test4": 2025, "final": 2026}
@@ -81,7 +88,7 @@ def season_targets_for_cut(year, targets=None):
     t["log_total_cases"] = np.log1p(t["obs_total"])
 
     fits = t[t["has_fit"]]
-    geo = pd.read_parquet(BASE_PATH, columns=["geocode", "uf", "regional_geocode"]).drop_duplicates("geocode")
+    geo = pd.read_parquet(GEO_PATH, columns=["geocode", "uf", "regional_geocode"]).drop_duplicates("geocode")
     geo["geocode"] = geo["geocode"].astype(str)
     t = t.merge(geo, on="geocode", how="left")
     fits = fits.merge(geo, on="geocode", how="left")
