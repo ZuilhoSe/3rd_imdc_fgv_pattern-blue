@@ -1,1 +1,67 @@
 data,id,candidato,conjunto,corte,semente,commit,status,wis_rel_uf,wis_rel_cidade,cobertura95_uf,observacao
+2026-11-15,v3_test3_s1,C1,desenvolvimento,test3,1,8cf00b4,avaliado,0.955,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_test2_s1,C1,desenvolvimento,test2,1,8cf00b4,avaliado,1.099,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_test1_s1,C1,desenvolvimento,test1,1,8cf00b4,avaliado,1.264,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2021_s1,C1,desenvolvimento,cut2021,1,8cf00b4,avaliado,1.016,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2020_s1,C1,desenvolvimento,cut2020,1,8cf00b4,avaliado,1.021,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2019_s1,C1,desenvolvimento,cut2019,1,8cf00b4,avaliado,0.897,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2018_s1,C1,desenvolvimento,cut2018,1,8cf00b4,avaliado,1.201,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2017_s1,C1,desenvolvimento,cut2017,1,8cf00b4,avaliado,0.726,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2016_s1,C1,desenvolvimento,cut2016,1,8cf00b4,avaliado,0.648,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2015_s1,C1,desenvolvimento,cut2015,1,8cf00b4,avaliado,0.902,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_test3_s2,C1,desenvolvimento,test3,2,8cf00b4,avaliado,1.051,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_test2_s2,C1,desenvolvimento,test2,2,8cf00b4,avaliado,1.051,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_test1_s2,C1,desenvolvimento,test1,2,8cf00b4,avaliado,1.013,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2021_s2,C1,desenvolvimento,cut2021,2,8cf00b4,avaliado,0.948,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2020_s2,C1,desenvolvimento,cut2020,2,8cf00b4,avaliado,1.257,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2019_s2,C1,desenvolvimento,cut2019,2,8cf00b4,avaliado,1.211,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2018_s2,C1,desenvolvimento,cut2018,2,8cf00b4,avaliado,1.028,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2017_s2,C1,desenvolvimento,cut2017,2,8cf00b4,avaliado,1.164,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2016_s2,C1,desenvolvimento,cut2016,2,8cf00b4,avaliado,1.427,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2015_s2,C1,desenvolvimento,cut2015,2,8cf00b4,avaliado,0.978,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_test3_s3,C1,desenvolvimento,test3,3,8cf00b4,avaliado,1.084,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_test2_s3,C1,desenvolvimento,test2,3,8cf00b4,avaliado,1.112,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_test1_s3,C1,desenvolvimento,test1,3,8cf00b4,avaliado,1.012,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2021_s3,C1,desenvolvimento,cut2021,3,8cf00b4,avaliado,0.962,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2020_s3,C1,desenvolvimento,cut2020,3,8cf00b4,avaliado,1.206,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2019_s3,C1,desenvolvimento,cut2019,3,8cf00b4,avaliado,0.979,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2018_s3,C1,desenvolvimento,cut2018,3,8cf00b4,avaliado,1.433,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2017_s3,C1,desenvolvimento,cut2017,3,8cf00b4,avaliado,0.505,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2016_s3,C1,desenvolvimento,cut2016,3,8cf00b4,avaliado,1.543,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2015_s3,C1,desenvolvimento,cut2015,3,8cf00b4,avaliado,0.921,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_test3_s4,C1,desenvolvimento,test3,4,8cf00b4,avaliado,1.003,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_test2_s4,C1,desenvolvimento,test2,4,8cf00b4,avaliado,1.045,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_test1_s4,C1,desenvolvimento,test1,4,8cf00b4,avaliado,1.029,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2021_s4,C1,desenvolvimento,cut2021,4,8cf00b4,avaliado,0.959,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2020_s4,C1,desenvolvimento,cut2020,4,8cf00b4,avaliado,1.358,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2019_s4,C1,desenvolvimento,cut2019,4,8cf00b4,avaliado,1.074,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2018_s4,C1,desenvolvimento,cut2018,4,8cf00b4,avaliado,1.045,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2017_s4,C1,desenvolvimento,cut2017,4,8cf00b4,avaliado,0.757,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2016_s4,C1,desenvolvimento,cut2016,4,8cf00b4,avaliado,0.786,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2015_s4,C1,desenvolvimento,cut2015,4,8cf00b4,avaliado,1.104,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_test3_s42,C1,desenvolvimento,test3,42,8cf00b4,avaliado,1.097,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_test2_s42,C1,desenvolvimento,test2,42,8cf00b4,avaliado,1.079,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_test1_s42,C1,desenvolvimento,test1,42,8cf00b4,avaliado,1.133,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2021_s42,C1,desenvolvimento,cut2021,42,8cf00b4,avaliado,0.996,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2020_s42,C1,desenvolvimento,cut2020,42,8cf00b4,avaliado,1.233,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2019_s42,C1,desenvolvimento,cut2019,42,8cf00b4,avaliado,1.030,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2018_s42,C1,desenvolvimento,cut2018,42,8cf00b4,avaliado,1.011,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2017_s42,C1,desenvolvimento,cut2017,42,8cf00b4,avaliado,0.731,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2016_s42,C1,desenvolvimento,cut2016,42,8cf00b4,avaliado,0.788,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-15,v3_cut2015_s42,C1,desenvolvimento,cut2015,42,8cf00b4,avaliado,0.881,,,HPC A100 com MPS; WIS rel. ao B3 da temporada (UFs); cidades só no agregado
+2026-11-16,c1_cut2015,C1,desenvolvimento,cut2015,"1,2,3,4,42",,avaliado,0.921,,,média de quantis das 5 sementes; dp entre sementes 0.090
+2026-11-16,c1_cut2016,C1,desenvolvimento,cut2016,"1,2,3,4,42",,avaliado,1.021,,,média de quantis das 5 sementes; dp entre sementes 0.414
+2026-11-16,c1_cut2017,C1,desenvolvimento,cut2017,"1,2,3,4,42",,avaliado,0.771,,,média de quantis das 5 sementes; dp entre sementes 0.239
+2026-11-16,c1_cut2018,C1,desenvolvimento,cut2018,"1,2,3,4,42",,avaliado,1.079,,,média de quantis das 5 sementes; dp entre sementes 0.179
+2026-11-16,c1_cut2019,C1,desenvolvimento,cut2019,"1,2,3,4,42",,avaliado,1.011,,,média de quantis das 5 sementes; dp entre sementes 0.117
+2026-11-16,c1_cut2020,C1,desenvolvimento,cut2020,"1,2,3,4,42",,avaliado,1.218,,,média de quantis das 5 sementes; dp entre sementes 0.123
+2026-11-16,c1_cut2021,C1,desenvolvimento,cut2021,"1,2,3,4,42",,avaliado,0.941,,,média de quantis das 5 sementes; dp entre sementes 0.028
+2026-11-16,c1_test1,C1,desenvolvimento,test1,"1,2,3,4,42",,avaliado,0.985,,,média de quantis das 5 sementes; dp entre sementes 0.109
+2026-11-16,c1_test2,C1,desenvolvimento,test2,"1,2,3,4,42",,avaliado,1.049,,,média de quantis das 5 sementes; dp entre sementes 0.029
+2026-11-16,c1_test3,C1,desenvolvimento,test3,"1,2,3,4,42",,avaliado,1.020,,,média de quantis das 5 sementes; dp entre sementes 0.059
+2026-11-16,c1_agregado,C1,desenvolvimento,todos_2015_2024,"1,2,3,4,42",,avaliado,0.995,0.970,,média geométrica das 10 temporadas; dp entre sementes 0.057
+2026-11-16,tft_v3_s1_agregado,C1,desenvolvimento,todos_2015_2024,1,,avaliado,0.955,0.931,,média geométrica das 10 temporadas
+2026-11-16,tft_v3_s2_agregado,C1,desenvolvimento,todos_2015_2024,2,,avaliado,1.104,1.049,,média geométrica das 10 temporadas
+2026-11-16,tft_v3_s3_agregado,C1,desenvolvimento,todos_2015_2024,3,,avaliado,1.036,1.013,,média geométrica das 10 temporadas
+2026-11-16,tft_v3_s4_agregado,C1,desenvolvimento,todos_2015_2024,4,,avaliado,1.003,1.004,,média geométrica das 10 temporadas
+2026-11-16,tft_v3_s42_agregado,C1,desenvolvimento,todos_2015_2024,42,,avaliado,0.986,0.995,,média geométrica das 10 temporadas

@@ -31,6 +31,11 @@ DEFAULT_RHO = 0.5
 BASELINE = {"state": "3rd_imdc_procc_bb_model", "city": "3rd_imdc_emap_lstm_muni"}
 SUBMITTED_V1 = "3rd_imdc_fgv_pattern-blue"
 PRIMARY = "tft_v3"
+# protocolo congelado, seção 3 e emenda E1: sementes rodadas no HPC; C1 é a média de quantis delas
+SEEDS = [1, 2, 3, 4, 42]
+SEED_MODELS = [f"tft_v3_s{s}" for s in SEEDS]
+C1 = "c1"
+QUANTILE_COLS = ["pred"] + [f"{side}_{k}" for k in ["50", "80", "90", "95"] for side in ("lower", "upper")]
 INTERVALS = ["50", "80", "90", "95"]
 
 
@@ -48,7 +53,8 @@ def load_truth():
 
 def params_paths(year):
     tag = C.SEASON_TAGS[year]
-    return {"tft_v2": f"{B.PARAMS_DIR}/params_{tag}.parquet",
+    seeds = {f"tft_v3_s{s}": f"{V.PARAMS_DIR}/params_{tag}_s{s}_full.parquet" for s in SEEDS}
+    return seeds | {"tft_v2": f"{B.PARAMS_DIR}/params_{tag}.parquet",
             "b3": f"{B.PARAMS_DIR}/params_b3_{year}.parquet",
             "tft_v3": f"{V.PARAMS_DIR}/params_{tag}_full.parquet",
             "tft_v3_best": f"{V.PARAMS_DIR}/params_{tag}_best.parquet",
@@ -100,6 +106,23 @@ def write_frames(years):
                 pd.concat([d.assign(unit=u) for u, d in f.items()], ignore_index=True).to_parquet(
                     f"{OUT}/frames/{model}_{year}_state_{rho}.parquet", index=False)
             print(f"{model} {year} ok", flush=True)
+        write_c1(year)
+
+
+def write_c1(year):
+    """C1: média, semana a semana, de cada quantil das 5 sementes (só com todas presentes)."""
+    for level, rho in [("city", None)] + [("state", r) for r in RHOS]:
+        paths = [f"{OUT}/frames/{m}_{year}_{level}_{rho}.parquet" for m in SEED_MODELS]
+        out = f"{OUT}/frames/{C1}_{year}_{level}_{rho}.parquet"
+        if os.path.exists(out) or not all(os.path.exists(p) for p in paths):
+            continue
+        frames = [pd.read_parquet(p).sort_values(["unit", "date"]).reset_index(drop=True) for p in paths]
+        for f in frames[1:]:
+            assert (f[["unit", "date"]].to_numpy() == frames[0][["unit", "date"]].to_numpy()).all()
+        avg = frames[0].copy()
+        avg[QUANTILE_COLS] = np.mean([f[QUANTILE_COLS].to_numpy() for f in frames], axis=0)
+        avg.to_parquet(out, index=False)
+    print(f"{C1} {year} ok", flush=True)
 
 
 def score(df, truth):
@@ -234,6 +257,26 @@ def rolling_table(sel):
     return pd.concat(out, ignore_index=True)
 
 
+def seed_table(sel, level="state", ref="b3"):
+    """Protocolo, seção 3: WIS relativo por temporada de cada semente, do C1 e o desvio entre sementes.
+
+    Mesma conta de R.relative_table: razão de (WIS + 1) por unidade-temporada, média geométrica na temporada.
+    A linha "todas" é a média geométrica das temporadas, que é a métrica primária.
+    """
+    prim = sel[(sel["level"] == level) & sel["cut_year"].isin(range(2015, 2025))]
+    per = prim.groupby(["model", "cut_year", "unit"], as_index=False)["wis"].mean()
+    wide = per.pivot_table(index=["cut_year", "unit"], columns="model", values="wis")
+    cols = [m for m in [C1] + SEED_MODELS + [PRIMARY] if m in wide.columns]
+    lr = (np.log(wide[cols] + 1)).sub(np.log(wide[ref] + 1), axis=0).dropna()
+    by = lr.groupby("cut_year").mean()
+    by.loc["todas"] = by.mean()
+    tab = np.exp(by)
+    seeds = [m for m in SEED_MODELS if m in tab.columns]
+    tab["dp_sementes"] = tab[seeds].std(axis=1, ddof=1)
+    tab["amplitude_sementes"] = tab[seeds].max(axis=1) - tab[seeds].min(axis=1)
+    return tab.rename(columns={PRIMARY: "tft_v3_s42_rtx3050"})
+
+
 def report():
     os.makedirs(REPORT, exist_ok=True)
     pd.set_option("display.width", 220, "display.max_columns", 30, "display.max_rows", 80)
@@ -244,7 +287,7 @@ def report():
     off = official_scores(truth)
     # os modelos oficiais têm prefixo próprio: não colidem com os nossos
     all_sc = pd.concat([sel, off], ignore_index=True)
-    ours = ["tft_v4", "tft_v4_best", "tft_v3", "tft_v3_best", "v3total_b3forma", "tft_v2", "b3", "b3_v3", "b1", "b2"]
+    ours = [C1] + SEED_MODELS + ["tft_v4", "tft_v4_best", "tft_v3", "tft_v3_best", "v3total_b3forma", "tft_v2", "b3", "b3_v3", "b1", "b2"]
     pd.Series({f"{m}|{y}": r for (m, y), r in chosen.items()}, name="rho").to_csv(f"{REPORT}/rho_by_cut.csv")
     rho_final = write_final(chosen)
     print("rho do corte final:", rho_final)
@@ -263,6 +306,9 @@ def report():
     rol = rolling_table(sel)
     rol.to_csv(f"{REPORT}/rolling_relative.csv", index=False)
     print("\nOrigem móvel, 2015/16 a 2024/25\n", rol.round(3).to_string(index=False))
+    seeds = seed_table(sel)
+    seeds.to_csv(f"{REPORT}/sementes_por_temporada.csv")
+    print("\nWIS relativo ao B3 por temporada e semente (UFs)\n", seeds.round(3).to_string())
     fc = forecast_table(chosen)
     fc.to_csv(f"{REPORT}/forecast_2026_27.csv", index=False)
     print("\nPrevisão 2026-27: soma das medianas\n", fc.groupby(["level", "model"])["soma_medianas"].sum().round(0).to_string())
