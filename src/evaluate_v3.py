@@ -35,6 +35,9 @@ PRIMARY = "tft_v3"
 SEEDS = [1, 2, 3, 4, 42]
 SEED_MODELS = [f"tft_v3_s{s}" for s in SEEDS]
 C1 = "c1"
+C2 = "c2"   # média de quantis de B2, B3 e C1, pesos iguais
+C3 = "c3"   # total do C1 com a forma do B3
+C4 = "c4"   # boosting para o log do total com a forma do B3 (src/c4_boosting.py)
 QUANTILE_COLS = ["pred"] + [f"{side}_{k}" for k in ["50", "80", "90", "95"] for side in ("lower", "upper")]
 INTERVALS = ["50", "80", "90", "95"]
 
@@ -54,7 +57,8 @@ def load_truth():
 def params_paths(year):
     tag = C.SEASON_TAGS[year]
     seeds = {f"tft_v3_s{s}": f"{V.PARAMS_DIR}/params_{tag}_s{s}_full.parquet" for s in SEEDS}
-    return seeds | {"tft_v2": f"{B.PARAMS_DIR}/params_{tag}.parquet",
+    return seeds | {C3: f"{V.PARAMS_DIR}/params_c3_{year}.parquet", C4: f"{V.PARAMS_DIR}/params_c4_{year}.parquet",
+                    "tft_v2": f"{B.PARAMS_DIR}/params_{tag}.parquet",
             "b3": f"{B.PARAMS_DIR}/params_b3_{year}.parquet",
             "tft_v3": f"{V.PARAMS_DIR}/params_{tag}_full.parquet",
             "tft_v3_best": f"{V.PARAMS_DIR}/params_{tag}_best.parquet",
@@ -83,6 +87,17 @@ def ensure_derived(year, targets):
         assert (tft["geocode"].to_numpy() == b3["geocode"].to_numpy()).all()
         b3["total_cases"] = tft["total_cases"].to_numpy()
         b3.to_parquet(p["v3total_b3forma"], index=False)
+    seed_paths = [p[m] for m in SEED_MODELS]
+    if all(os.path.exists(s) for s in seed_paths) and not os.path.exists(p[C3]):
+        # C3: total do C1 (média, quantil a quantil, do total das 5 sementes) com a forma do B3
+        b3 = pd.read_parquet(p["b3"]).astype({"geocode": str}).sort_values(["geocode", "q"]).reset_index(drop=True)
+        totals = []
+        for s in seed_paths:
+            t = pd.read_parquet(s).astype({"geocode": str}).sort_values(["geocode", "q"]).reset_index(drop=True)
+            assert (t[["geocode", "q"]].to_numpy() == b3[["geocode", "q"]].to_numpy()).all()
+            totals.append(t["total_cases"].to_numpy(float))
+        b3["total_cases"] = np.mean(totals, axis=0)
+        b3.to_parquet(p[C3], index=False)
 
 
 def write_frames(years):
@@ -107,22 +122,39 @@ def write_frames(years):
                     f"{OUT}/frames/{model}_{year}_state_{rho}.parquet", index=False)
             print(f"{model} {year} ok", flush=True)
         write_c1(year)
+        write_c2(year)
+
+
+def average_frames(paths, out):
+    """Média, semana a semana, de cada quantil; só grava se todas as entradas existirem."""
+    if os.path.exists(out) or not all(os.path.exists(p) for p in paths):
+        return False
+    frames = [pd.read_parquet(p).assign(date=lambda d: pd.to_datetime(d["date"]).dt.strftime("%Y-%m-%d"))
+              .sort_values(["unit", "date"]).reset_index(drop=True) for p in paths]
+    for f in frames[1:]:
+        assert (f[["unit", "date"]].to_numpy() == frames[0][["unit", "date"]].to_numpy()).all()
+    avg = frames[0].copy()
+    avg[QUANTILE_COLS] = np.mean([f[QUANTILE_COLS].to_numpy() for f in frames], axis=0)
+    avg.to_parquet(out, index=False)
+    return True
 
 
 def write_c1(year):
-    """C1: média, semana a semana, de cada quantil das 5 sementes (só com todas presentes)."""
+    """C1: média de quantis das 5 sementes."""
     for level, rho in [("city", None)] + [("state", r) for r in RHOS]:
         paths = [f"{OUT}/frames/{m}_{year}_{level}_{rho}.parquet" for m in SEED_MODELS]
-        out = f"{OUT}/frames/{C1}_{year}_{level}_{rho}.parquet"
-        if os.path.exists(out) or not all(os.path.exists(p) for p in paths):
-            continue
-        frames = [pd.read_parquet(p).sort_values(["unit", "date"]).reset_index(drop=True) for p in paths]
-        for f in frames[1:]:
-            assert (f[["unit", "date"]].to_numpy() == frames[0][["unit", "date"]].to_numpy()).all()
-        avg = frames[0].copy()
-        avg[QUANTILE_COLS] = np.mean([f[QUANTILE_COLS].to_numpy() for f in frames], axis=0)
-        avg.to_parquet(out, index=False)
-    print(f"{C1} {year} ok", flush=True)
+        if average_frames(paths, f"{OUT}/frames/{C1}_{year}_{level}_{rho}.parquet"):
+            print(f"{C1} {year} {level} {rho} ok", flush=True)
+
+
+def write_c2(year):
+    """C2: média de quantis de B2, B3 e C1. O B2 não depende de rho (previsão direta por UF)."""
+    for level, rho in [("city", None)] + [("state", r) for r in RHOS]:
+        paths = [f"{R.OUT}/direct/b2_{year}_{level}.parquet",
+                 f"{OUT}/frames/b3_{year}_{level}_{rho}.parquet",
+                 f"{OUT}/frames/{C1}_{year}_{level}_{rho}.parquet"]
+        if average_frames(paths, f"{OUT}/frames/{C2}_{year}_{level}_{rho}.parquet"):
+            print(f"{C2} {year} {level} {rho} ok", flush=True)
 
 
 def score(df, truth):
@@ -266,7 +298,7 @@ def seed_table(sel, level="state", ref="b3"):
     prim = sel[(sel["level"] == level) & sel["cut_year"].isin(range(2015, 2025))]
     per = prim.groupby(["model", "cut_year", "unit"], as_index=False)["wis"].mean()
     wide = per.pivot_table(index=["cut_year", "unit"], columns="model", values="wis")
-    cols = [m for m in [C1] + SEED_MODELS + [PRIMARY] if m in wide.columns]
+    cols = [m for m in [C1, C2, C3, C4] + SEED_MODELS + [PRIMARY] if m in wide.columns]
     lr = (np.log(wide[cols] + 1)).sub(np.log(wide[ref] + 1), axis=0).dropna()
     by = lr.groupby("cut_year").mean()
     by.loc["todas"] = by.mean()
@@ -287,7 +319,7 @@ def report():
     off = official_scores(truth)
     # os modelos oficiais têm prefixo próprio: não colidem com os nossos
     all_sc = pd.concat([sel, off], ignore_index=True)
-    ours = [C1] + SEED_MODELS + ["tft_v4", "tft_v4_best", "tft_v3", "tft_v3_best", "v3total_b3forma", "tft_v2", "b3", "b3_v3", "b1", "b2"]
+    ours = [C1, C2, C3, C4] + SEED_MODELS + ["tft_v4", "tft_v4_best", "tft_v3", "tft_v3_best", "v3total_b3forma", "tft_v2", "b3", "b3_v3", "b1", "b2"]
     pd.Series({f"{m}|{y}": r for (m, y), r in chosen.items()}, name="rho").to_csv(f"{REPORT}/rho_by_cut.csv")
     rho_final = write_final(chosen)
     print("rho do corte final:", rho_final)

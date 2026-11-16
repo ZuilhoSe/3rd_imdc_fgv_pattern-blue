@@ -100,3 +100,4 @@ Feita depois de ver o resultado do C1 (WIS relativo 0,995 nas UFs) e antes de ro
   - UF, Köppen, bioma e macrorregião como categóricas. A regional ficou de fora porque tem 439 categorias e a biblioteca aceita até 255.
 - **Treino do corte Y:** todas as temporadas completas até Y-1, com as variáveis montadas como se o corte fosse o da temporada correspondente.
 - **Forma:** alpha, beta e pico vêm do B3 do mesmo corte. A agregação para UF usa a mesma escolha de rho dos outros modelos.
+- **Esclarecimento, antes de qualquer resultado do C4:** a temporada 2010 está incompleta na base, que começa em janeiro de 2010. Por isso ela não conta como temporada completa, e o treino começa na temporada 2012, a primeira cuja parcial até a EW25 está inteira na base. Defasagens que não existem em nenhum exemplo de treino de um corte ficam fora do modelo desse corte. A biblioteca não aceita coluna vazia.

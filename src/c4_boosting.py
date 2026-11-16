@@ -26,6 +26,7 @@ CATEGORICAL = ["uf", "koppen", "biome", "macroregion_name"]
 N_LAGS = 4
 RECENT_WEEKS = 8
 SEED = 0
+FIRST_SEASON = 2011
 
 
 def load():
@@ -33,6 +34,7 @@ def load():
     base = pd.read_parquet(V.BASE_PATH, columns=cols)
     base["geocode"] = base["geocode"].astype(str)
     totals = base.groupby(["geocode", "season"])["casos"].sum().rename("total").reset_index()
+    totals = totals[totals["season"] >= FIRST_SEASON]   # a 2010 começa em janeiro na base: incompleta
     targets = pd.read_parquet(V.TARGETS_PATH, columns=["geocode", "season", "obs_total"])
     targets["geocode"] = targets["geocode"].astype(str)
     static = base.drop_duplicates("geocode", keep="last").set_index("geocode")[CATEGORICAL]
@@ -64,7 +66,8 @@ def features(base, totals, static, cut_year):
 
 def fit_predict(base, totals, targets, static, year):
     rows = []
-    for s in range(2011, year):           # temporadas completas no corte Y: S <= Y-1
+    # temporadas completas no corte Y: S <= Y-1; a partir de 2012, porque a parcial da 2011 começa na 2010
+    for s in range(FIRST_SEASON + 1, year):
         f = features(base, totals, static, s - 1)
         y = targets[targets["season"] == s].set_index("geocode")["obs_total"]
         f = f.join(np.log1p(y).rename("y"), how="inner")
@@ -72,6 +75,7 @@ def fit_predict(base, totals, targets, static, year):
     train = pd.concat(rows)
     train = train[train["y"].notna()]
     X, y = train.drop(columns="y"), train["y"].to_numpy(float)
+    X = X.loc[:, X.notna().any()]        # defasagem que ainda não existe em nenhum exemplo de treino
     test = features(base, totals, static, year)
     for c in CATEGORICAL:                 # mesmas categorias no treino e na previsão
         cats = pd.api.types.union_categoricals([X[c], test[c]]).categories
