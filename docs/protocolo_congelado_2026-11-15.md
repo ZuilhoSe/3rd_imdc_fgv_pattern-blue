@@ -101,3 +101,12 @@ Feita depois de ver o resultado do C1 (WIS relativo 0,995 nas UFs) e antes de ro
 - **Treino do corte Y:** todas as temporadas completas até Y-1, com as variáveis montadas como se o corte fosse o da temporada correspondente.
 - **Forma:** alpha, beta e pico vêm do B3 do mesmo corte. A agregação para UF usa a mesma escolha de rho dos outros modelos.
 - **Esclarecimento, antes de qualquer resultado do C4:** a temporada 2010 está incompleta na base, que começa em janeiro de 2010. Por isso ela não conta como temporada completa, e o treino começa na temporada 2012, a primeira cuja parcial até a EW25 está inteira na base. Defasagens que não existem em nenhum exemplo de treino de um corte ficam fora do modelo desse corte. A biblioteca não aceita coluna vazia.
+
+### E3 — 2026-11-16, antes de rodar o C5: modelo de fundação
+
+Feita depois de ver C1 a C4 e antes de rodar o C5 em qualquer corte. Código em `src/c5_chronos.py`.
+
+- **Modelo:** um só, `amazon/chronos-bolt-small` (pesos abertos, Hugging Face), via `chronos-forecasting` 2.3.2. Foi escolhido por ter pesos abertos, ser pequeno o bastante para rodar na CPU e já vir com previsão por quantil. Fica aberto um segundo modelo, se for registrado em outra emenda antes de rodar.
+- **Uso:** zero-shot, sem treino nem ajuste. O contexto é a série semanal de casos de cada UF e de cada cidade do desafio até a EW25/Y. O modelo prevê até a EW40/Y+1, e ficam as semanas da temporada.
+- **Quantis:** os 9 níveis exigidos pelo desafio. O Chronos-Bolt só foi treinado de 0,1 a 0,9, então os intervalos de 90% e 95% saem iguais ao de 80%. Isso fica como publicado, sem correção.
+- **Agregação:** previsão direta por UF e por cidade, como B1 e B2, sem rho.
