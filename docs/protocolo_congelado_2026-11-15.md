@@ -110,3 +110,21 @@ Feita depois de ver C1 a C4 e antes de rodar o C5 em qualquer corte. Código em 
 - **Uso:** zero-shot, sem treino nem ajuste. O contexto é a série semanal de casos de cada UF e de cada cidade do desafio até a EW25/Y. O modelo prevê até a EW40/Y+1, e ficam as semanas da temporada.
 - **Quantis:** os 9 níveis exigidos pelo desafio. O Chronos-Bolt só foi treinado de 0,1 a 0,9, então os intervalos de 90% e 95% saem iguais ao de 80%. Isso fica como publicado, sem correção.
 - **Agregação:** previsão direta por UF e por cidade, como B1 e B2, sem rho.
+
+### E4 — 2026-11-16, antes de qualquer previsão de chikungunya: escolha do candidato
+
+Feita com os 5 candidatos pontuados nos 10 cortes de desenvolvimento, 4 dias antes da data da seção 5. A regra é a da seção 5, sem mudança. Nenhuma previsão nem ajuste de chikungunya como alvo foi feito até aqui.
+
+WIS relativo ao B3 nos cortes EW25 de 2015 a 2024 (`reports/v3/rolling_relative.csv`; IC 95% por bootstrap de temporadas; "melhor" é a fração das unidade-temporadas em que o candidato bate o B3):
+
+| Id | Candidato | UFs | IC 95% (UFs) | Melhor (UFs) | Cidades |
+|---|---|---|---|---|---|
+| C1 | v3, média das 5 sementes | 0,995 | 0,929–1,066 | 47% | 0,970 |
+| **C2** | **Média de quantis de B2, B3 e C1** | **0,939** | **0,907–0,974** | **66%** | 0,973 |
+| C3 | Total do C1 com forma do B3 | 0,950 | 0,886–1,010 | 50% | 0,959 |
+| C4 | Boosting do log do total, forma do B3 | 0,976 | 0,912–1,049 | 46% | 0,949 |
+| C5 | Chronos-Bolt Small, zero-shot | 1,009 | 0,849–1,179 | 50% | 1,008 |
+
+- **Escolhido: C2.** Tem o menor WIS relativo nas UFs. A distância para o segundo (C3) é 0,011, fora da faixa de empate de 0,01; e, se fosse empate, o C2 venceria por ser o mais simples.
+- **Pipeline em chikungunya (seção 6):** B2 e B3 de chikungunya e o C1 de chikungunya, este como média de quantis das sementes 1, 2 e 3, combinados com pesos iguais, como no desenvolvimento. Hiperparâmetros do TFT os de `src/run_v3.sh`, no mesmo servidor da E1.
+- Os 5 candidatos continuam relatados no artigo (seção 5, item 4). Commits dos resultados: `bcee534` (C1), `415e13f` (C2 a C4) e `df11912` (C5).
