@@ -83,3 +83,20 @@ Cada execução, inclusive as que falharem, ganha uma linha em `reports/registro
 ### E1 — 2026-11-15, antes de rodar qualquer semente: hardware das sementes
 
 As sementes do v3 rodam no servidor `multigpu` (A100), não na RTX 3050 local. Como a mesma semente em GPUs diferentes não reproduz bit a bit, a semente 42 também é refeita no servidor (`<corte>_s42`), e o C1 passa a ser a média de quantis das 5 sementes rodadas no servidor (1, 2, 3, 4 e 42). A rodada original da semente 42 na RTX 3050 é relatada ao lado como sensibilidade ao hardware. Hiperparâmetros iguais aos de `src/run_v3.sh`; só `NUM_WORKERS` e o paralelismo mudam, e nenhum dos dois altera o modelo. Lista de tags em `hpc/tags_sementes_v3.txt`.
+
+### E2 — 2026-11-16, antes de rodar o C4: biblioteca, variáveis e número de árvores
+
+Feita depois de ver o resultado do C1 (WIS relativo 0,995 nas UFs) e antes de rodar o C4 em qualquer corte. Código em `src/c4_boosting.py`.
+
+- **Biblioteca:** `sklearn.ensemble.HistGradientBoostingRegressor` (scikit-learn 1.9.0), `loss="quantile"`, um modelo por nível de `common.QUANTILE_LEVELS`, com os quantis ordenados depois para não cruzarem.
+- **Hiperparâmetros:** os padrões da biblioteca, incluindo o número de árvores (`max_iter=100`) e a parada antecipada automática. A semente é fixa (`random_state=0`).
+- **Alvo:** log(1 + casos totais) da temporada EW41/Y a EW40/Y+1, por município.
+- **Variáveis, todas conhecidas na EW25/Y:**
+  - log do total das 4 últimas temporadas completas;
+  - mediana e máximo do log do total das temporadas completas, e quantas há;
+  - log dos casos da temporada corrente até a EW25/Y;
+  - log dos casos das últimas 8 semanas;
+  - log da população;
+  - UF, Köppen, bioma e macrorregião como categóricas. A regional ficou de fora porque tem 439 categorias e a biblioteca aceita até 255.
+- **Treino do corte Y:** todas as temporadas completas até Y-1, com as variáveis montadas como se o corte fosse o da temporada correspondente.
+- **Forma:** alpha, beta e pico vêm do B3 do mesmo corte. A agregação para UF usa a mesma escolha de rho dos outros modelos.
