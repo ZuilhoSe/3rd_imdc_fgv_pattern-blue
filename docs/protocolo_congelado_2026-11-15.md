@@ -152,3 +152,13 @@ Feita depois do pré-processamento de chikungunya (`src/preprocess_chik.py`, que
 - **Verdade:** os casos de chikungunya de `data/raw/` (os mesmos hashes da seção 1). Em dengue a avaliação usou os observados oficiais do IMDC (`data/external/imdc_results/`), que não existem localmente para chikungunya; a seção 1 proíbe baixar dados novos até 2026-11-28. Nas UFs, a verdade é a soma dos municípios, sem o ES.
 - **rho:** a mesma regra do desenvolvimento (cortes ≤ Y-2, grade 0,5, 0,8 e 1,0, padrão 0,5), aplicada só aos cortes de chikungunya. Os cortes de 2017 e 2018 ficam com 0,5.
 - **Código:** `src/confirmatorio_chik.py` (B2, B3, combinações, pontuação única e critério); TFT pelo `src/train_v3.py` e `src/infer_v3.py` com `DOENCA=chik`, tags em `hpc/tags_chik.txt`.
+
+### E7 — 2026-11-18, antes de treinar o TFT de chikungunya e de pontuar qualquer previsão: retirada do confirmatório B
+
+O primeiro artigo passa a tratar só de dengue. O teste da seção 6 não será executado.
+
+- **Motivo:** decisão do autor para cumprir a entrega, com o treino de chikungunya ainda parado na fila da GPU do HPC.
+- **Estado de chikungunya nesta data:** foram feitos o pré-processamento e os baselines locais (B2 direto e parâmetros do B3). O job 147, que treinaria o TFT, foi cancelado antes de começar. Nenhum TFT foi treinado, nenhuma combinação foi montada e nenhuma previsão foi pontuada; `reports/confirmatorio_chik/` não existe.
+- **Consequência para a tese (seção 7):** sem teste confirmatório não há como afirmar ganho. Vale o ramo "sem ganho ou inconclusivo", e a tese do artigo é a de diagnóstico. O C2 é relatado como o melhor candidato no desenvolvimento, sem confirmação.
+- **O que continua valendo:** a escolha do C2 (E4), todos os candidatos relatados (seção 5, item 4) e o depósito das previsões 2026/27 (seção 8), que é o único teste limpo restante e será pontuado depois da EW40/2027, fora deste artigo.
+- **O que fica sem efeito neste artigo:** a seção 6 e as emendas E5 e E6, mantidas aqui como registro.
