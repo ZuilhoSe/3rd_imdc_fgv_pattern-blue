@@ -1,5 +1,7 @@
 # 3rd_imdc_fgv_pattern-blue
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24351586.svg)](https://doi.org/10.5281/zenodo.24351586)
+
 **3rd Infodengue–Mosqlimate Dengue Challenge (IMDC 2026)**
 Tracks: Dengue — State level (mandatory) and City level (optional).
 

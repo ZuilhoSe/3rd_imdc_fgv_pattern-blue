@@ -2,6 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "Pattern Blue: two-stage TFT + Richards-curve dengue forecasting model (3rd IMDC 2026)"
 type: software
+doi: "10.5281/zenodo.24351586"
 license: GPL-3.0-only
 repository-code: "https://github.com/ZuilhoSe/3rd_imdc_fgv_pattern-blue"
 authors:
