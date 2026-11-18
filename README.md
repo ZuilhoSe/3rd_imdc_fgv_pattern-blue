@@ -34,13 +34,13 @@ final forecast), each using only information available at that cut-off.
 
 - **Team leader**: Zuilho Segundo, segundozuilho@gmail.com
 - **Institution**: FGV EMAp
-- **Contributors**: Zuilho Segundo, Iasmim Ferreira, Flávio Codeço
+- **Contributors**: Zuilho Segundo, Iasmim Ferreira de Almeida, Flávio Codeço Coelho
 
-| Name           | Institution | Country | Role        |
-|----------------|-------------|---------|-------------|
-| Zuilho Segundo  | FGV EMAp    | Brazil  | Team Leader |
-| Iasmim Almeida | FGV EMAp    | Brazil  | Advisor     |
-| Flávio Codeço  | FGV EMAp    | Brazil  | Professor   |
+| Name                       | Institution | Country | Role        |
+|----------------------------|-------------|---------|-------------|
+| Zuilho Segundo             | FGV EMAp    | Brazil  | Team Leader |
+| Iasmim Ferreira de Almeida | FGV EMAp    | Brazil  | Advisor     |
+| Flávio Codeço Coelho       | FGV EMAp    | Brazil  | Professor   |
 
 
 ---

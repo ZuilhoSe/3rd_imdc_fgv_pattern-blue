@@ -4,8 +4,8 @@
   "description": "<p>Model submitted by team <b>Pattern Blue</b> (FGV EMAp) to the 3rd Infodengue-Mosqlimate Dengue Challenge (IMDC 2026), dengue tracks: state level (mandatory) and city level (optional).</p><p>Two-stage, parameter-based design: a single global Temporal Fusion Transformer (TFT) trained across all Brazilian municipalities predicts the parameters of the Richards curve fitted by the Episcanner pipeline to each epidemic season; the predicted parameters are then used to reconstruct the weekly incidence curve. State-level forecasts are the sum of the municipal curves. One model is trained per forecast cut-off.</p>",
   "creators": [
     {"name": "Segundo, Zuilho", "affiliation": "FGV EMAp"},
-    {"name": "Almeida, Iasmim", "affiliation": "FGV EMAp"},
-    {"name": "Codeço, Flávio", "affiliation": "FGV EMAp"}
+    {"name": "Almeida, Iasmim Ferreira de", "affiliation": "FGV EMAp"},
+    {"name": "Coelho, Flávio Codeço", "affiliation": "FGV EMAp"}
   ],
   "license": "GPL-3.0-only",
   "keywords": ["dengue", "forecasting", "Temporal Fusion Transformer", "Richards curve", "Episcanner", "IMDC", "Mosqlimate", "InfoDengue"],

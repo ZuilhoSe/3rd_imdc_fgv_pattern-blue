@@ -8,10 +8,10 @@ authors:
   - family-names: Segundo
     given-names: Zuilho
     affiliation: FGV EMAp
-  - family-names: Almeida
-    given-names: Iasmim
+  - family-names: de Almeida
+    given-names: Iasmim Ferreira
     affiliation: FGV EMAp
-  - family-names: Codeço
-    given-names: Flávio
+  - family-names: Coelho
+    given-names: Flávio Codeço
     affiliation: FGV EMAp
 keywords: [dengue, forecasting, TFT, Richards curve, IMDC]
